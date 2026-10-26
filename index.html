@@ -155,7 +155,7 @@ async function train(){
  try{
   await tf.ready();if(model)model.dispose();if(opt)opt.dispose();const d=dataset(documents,+$("context").value);model=createModel(idToToken.length,d.ctx);opt=tf.train.adam(+$("lr").value/10000);
   $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";
-  const epochs=+$("epochs").value,bs=Math.min(4,d.trainSamples.length),steps=Math.min(6,Math.max(3,Math.ceil(d.trainSamples.length/bs)));$("bar").style.width="0%";
+  const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(80,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
   for(let ep=0;ep<epochs;ep++){let lastLoss=0;const shuffled=d.trainSamples.slice().sort(()=>Math.random()-.5),epochSamples=shuffled.slice(0,Math.min(shuffled.length,bs*steps));let actualSteps=0;
    for(let start=0;start<epochSamples.length;start+=bs){const batch=epochSamples.slice(start,start+bs),n=batch.length;const x=tf.tensor2d(batch.map(s=>s.x),[n,d.ctx],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,d.ctx],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,d.ctx],"float32"),cost=opt.minimize(()=>makeLoss(x,y,mw),true);lastLoss+=cost.dataSync()[0];actualSteps++;cost.dispose();x.dispose();y.dispose();mw.dispose();await tf.nextFrame()}lastLoss/=Math.max(1,actualSteps);
    $("bar").style.width=((ep+1)/epochs*100)+"%";$("loss").textContent=lastLoss.toFixed(3);
