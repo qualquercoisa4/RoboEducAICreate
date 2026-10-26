@@ -2,7 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#4c6970"><title>RoboEduc AI Create</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <style>
-:root{--teal:#4c6970;--pink:#e52d62;--blue:#4b9bd5;--yellow:#ffbf00;--green:#a3c638;--ink:#24262a;--muted:#6b7280;--line:#e5e7eb;--paper:#fff;--wash:#f6f8f8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{height:78px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 max(20px,calc((100vw - 1120px)/2));gap:13px}.brandmark{width:48px;height:48px;border-radius:7px;background:var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#d9c8dc;line-height:1;font-size:13px;letter-spacing:-.5px;flex-shrink:0}.brandmark .letters{font-size:17px;font-weight:900;margin-top:4px}.brandmark b{color:var(--pink)}.brandmark i{color:var(--blue);font-style:normal}.brandmark em{color:var(--yellow);font-style:normal}.brandmark strong{color:var(--green)}.brand h1{font-size:19px;margin:0;line-height:1.2}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.top-actions{margin-left:auto;display:flex;gap:8px}.top-actions button{background:white;color:var(--teal);border:1px solid var(--line);padding:8px 12px}.page{display:none;min-height:calc(100vh - 78px);padding:0 20px 50px}.page.active{display:block}.container{width:100%;max-width:1000px;margin:0 auto}.home-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:76px 0 66px}.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.8px;color:var(--pink)}.home-hero h2{font-size:clamp(38px,5vw,60px);letter-spacing:-2px;line-height:1.05;margin:14px 0 20px;max-width:620px}.home-hero p{font-size:18px;color:#555e63;max-width:520px;margin:0 0 25px}.color-word{color:var(--pink)}.art-card{background:var(--teal);border-radius:20px;min-height:300px;padding:30px;display:flex;flex-direction:column;justify-content:space-between;color:white;overflow:hidden;position:relative}.art-card:after{content:"";position:absolute;width:210px;height:210px;border:28px solid #ffffff22;border-radius:50%;right:-40px;top:-45px}.art-card .bigmark{font-size:68px;position:relative;z-index:1}.art-card .palette{display:flex;gap:8px;margin:22px 0 0}.swatch{height:9px;flex:1;border-radius:20px}.art-card strong{font-size:22px;position:relative;z-index:1}.art-card small{color:#e3e9ea;position:relative;z-index:1}.button{border:0;border-radius:9px;background:var(--pink);color:white;padding:13px 20px;font:inherit;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .15s,filter .15s}.button:hover{filter:brightness(.96);transform:translateY(-1px)}.button.blue{background:var(--blue)}.button.teal{background:var(--teal)}.button.light{background:white;color:var(--teal);border:1px solid var(--line)}.button:disabled{opacity:.5;cursor:not-allowed;transform:none}.home-bottom{border-top:1px solid var(--line);padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}.home-bottom p{margin:0;color:var(--muted);font-size:14px}.page-head{padding:36px 0 26px}.back{border:0;background:transparent;color:var(--teal);font:inherit;font-weight:700;cursor:pointer;padding:0;margin-bottom:20px}.page-head h2{font-size:32px;letter-spacing:-.8px;margin:0 0 6px}.page-head p{margin:0;color:var(--muted)}.form-card,.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}.form-card{max-width:650px}.field{margin-bottom:20px}.field label,label{display:block;font-size:13px;font-weight:750;color:#515a60;margin:0 0 7px}.field input,.field textarea,input,textarea{width:100%;border:1px solid #d7dce0;background:#fff;color:var(--ink);border-radius:8px;padding:12px;font:inherit}.field textarea{min-height:90px;resize:vertical}.hint,.sub,.small{color:var(--muted);font-size:13px}.hint{margin:6px 0 0}.swatches{display:flex;gap:10px;align-items:center;margin:14px 0 24px}.swatches .swatch{height:28px;max-width:58px;border-radius:7px}.form-actions{display:flex;gap:10px;flex-wrap:wrap}.training-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-bottom:24px}.panel h2{font-size:19px;margin:0}.sub{margin:5px 0 18px}.section-head{display:flex;gap:11px;align-items:center;margin-bottom:20px}.section-head .sub{margin:2px 0 0}.step{width:34px;height:34px;border-radius:10px;background:#e8f3f5;color:var(--teal);display:grid;place-items:center;font-weight:800;flex-shrink:0}.step.pink{background:#fff0f4;color:var(--pink)}textarea#corpus{min-height:235px;resize:vertical;font-size:14px;line-height:1.65}.row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.row button{flex:1}.bar{height:6px;background:#edf0f2;border-radius:10px;overflow:hidden;margin-top:16px}.bar span{display:block;height:100%;width:0;background:var(--green);transition:width .15s}.status{font-size:13px;color:var(--muted);min-height:20px;margin-top:9px}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.metric{background:#f8f9f9;border:1px solid var(--line);padding:10px;border-radius:9px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:19px}.advanced{border-top:1px solid var(--line);margin-top:18px;padding-top:13px}.advanced summary{cursor:pointer;font-size:13px;font-weight:750;color:var(--teal)}.advanced label{margin-top:14px}.range{display:grid;grid-template-columns:1fr 58px;gap:10px;align-items:center;margin:8px 0}.range input{padding:0;accent-color:var(--pink)}output{background:#f8f9f9;border:1px solid var(--line);border-radius:7px;text-align:center;padding:3px;font-size:13px}.chat{height:270px;overflow:auto;background:#f8f9f9;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}.bubble{max-width:95%;padding:10px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}.user{align-self:flex-end;background:#e8f3f5}.bot{align-self:flex-start;background:white;border:1px solid var(--line)}.bubble small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px;font-weight:800}.chatinput{display:flex;gap:8px;margin-top:10px}.chatinput input{flex:1;min-width:0}.chatinput button{flex:0 0 auto}#probs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.chip{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;background:white}.chip b{color:var(--pink)}.model-chip{margin-left:auto;background:#f0f5f5;color:var(--teal);font-size:12px;font-weight:750;border-radius:20px;padding:7px 11px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.statusline{background:#edf6f6;border-radius:9px;padding:11px 13px;font-size:13px;color:var(--teal);margin-bottom:18px}.dataset-summary{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f7f9f9;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:14px}.doc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}.document-card{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;min-width:0;transition:border-color .15s,box-shadow .15s}.document-card.open{grid-column:1/-1;border-color:#b8cdd1;box-shadow:0 3px 12px #243b4210}.doc-head{display:flex;align-items:center;gap:7px;margin-bottom:0}.doc-open{width:100%;min-height:106px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:0;background:transparent;color:var(--ink);cursor:pointer;padding:7px 3px;text-align:center}.doc-icon{width:44px;height:44px;border-radius:12px;background:#e8f3f5;display:grid;place-items:center;font-size:24px}.doc-icon.dialogue{background:#fff0f4}.doc-card-title{font-size:12px;font-weight:750;line-height:1.3;overflow-wrap:anywhere;max-width:100%}.doc-card-meta{font-size:10px;color:var(--muted)}.doc-editor{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:9px}.document-card.open .doc-editor{display:block}.doc-title-input{font-weight:750;min-width:0;flex:1;padding:8px 9px!important}.doc-delete{background:white;color:#a43a56;border:1px solid #f0dce2;padding:7px 9px;border-radius:7px;flex:0 0 auto}.doc-field{margin-top:9px}.doc-field label{font-size:12px;margin-bottom:5px}.doc-field textarea{min-height:84px;padding:9px;font-size:13px;resize:vertical}.doc-field input{font-size:13px;padding:9px}.doc-help{font-size:11px;color:var(--muted);margin-top:7px}.dataset-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.dataset-actions .button{flex:1;font-size:13px;padding:10px 12px}.metrics .metric{min-width:0}.metric strong{overflow-wrap:anywhere}.doc-empty{border:1px dashed #cfd7da;border-radius:10px;padding:18px;text-align:center;font-size:13px;color:var(--muted)}.raw-output{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:12px;color:var(--muted)}.raw-output summary{cursor:pointer;font-weight:700;color:var(--teal)}.raw-output p{white-space:pre-wrap;margin:7px 0 0;color:var(--ink);font-size:13px}.footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0}.hidden{display:none!important}@media(max-width:720px){header{height:70px;padding:0 14px}.brandmark{width:43px;height:43px}.brand h1{font-size:16px}.brand p{font-size:11px}.top-actions button{padding:7px 9px;font-size:12px}.page{min-height:calc(100vh - 70px);padding:0 15px 32px}.home-hero{grid-template-columns:1fr;gap:25px;padding:45px 0 36px}.home-hero h2{font-size:43px;letter-spacing:-1.5px}.home-hero p{font-size:16px}.art-card{min-height:190px;padding:22px}.art-card .bigmark{font-size:48px}.home-bottom{align-items:flex-start;flex-direction:column}.page-head{padding:26px 0 20px}.page-head h2{font-size:27px}.form-card,.panel{padding:17px}.training-layout{grid-template-columns:1fr;gap:14px}textarea#corpus{min-height:190px}.doc-field textarea{min-height:78px}.dataset-actions{flex-direction:column}.doc-head{gap:6px}.doc-title-input{font-size:13px!important}.chat{height:250px}.model-chip{max-width:40%}}
+:root{--teal:#4c6970;--pink:#e52d62;--blue:#4b9bd5;--yellow:#ffbf00;--green:#a3c638;--ink:#24262a;--muted:#6b7280;--line:#e5e7eb;--paper:#fff;--wash:#f6f8f8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{height:78px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 max(20px,calc((100vw - 1120px)/2));gap:13px}.brandmark{width:48px;height:48px;border-radius:7px;background:var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#d9c8dc;line-height:1;font-size:13px;letter-spacing:-.5px;flex-shrink:0}.brandmark .letters{font-size:17px;font-weight:900;margin-top:4px}.brandmark b{color:var(--pink)}.brandmark i{color:var(--blue);font-style:normal}.brandmark em{color:var(--yellow);font-style:normal}.brandmark strong{color:var(--green)}.brand h1{font-size:19px;margin:0;line-height:1.2}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.top-actions{margin-left:auto;display:flex;gap:8px}.top-actions button{background:white;color:var(--teal);border:1px solid var(--line);padding:8px 12px}.page{display:none;min-height:calc(100vh - 78px);padding:0 20px 50px}.page.active{display:block}.container{width:100%;max-width:1000px;margin:0 auto}.home-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:76px 0 66px}.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.8px;color:var(--pink)}.home-hero h2{font-size:clamp(38px,5vw,60px);letter-spacing:-2px;line-height:1.05;margin:14px 0 20px;max-width:620px}.home-hero p{font-size:18px;color:#555e63;max-width:520px;margin:0 0 25px}.color-word{color:var(--pink)}.art-card{background:var(--teal);border-radius:20px;min-height:300px;padding:30px;display:flex;flex-direction:column;justify-content:space-between;color:white;overflow:hidden;position:relative}.art-card:after{content:"";position:absolute;width:210px;height:210px;border:28px solid #ffffff22;border-radius:50%;right:-40px;top:-45px}.art-card .bigmark{font-size:68px;position:relative;z-index:1}.art-card .palette{display:flex;gap:8px;margin:22px 0 0}.swatch{height:9px;flex:1;border-radius:20px}.art-card strong{font-size:22px;position:relative;z-index:1}.art-card small{color:#e3e9ea;position:relative;z-index:1}.button{border:0;border-radius:9px;background:var(--pink);color:white;padding:13px 20px;font:inherit;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:transform .15s,filter .15s}.button:hover{filter:brightness(.96);transform:translateY(-1px)}.button.blue{background:var(--blue)}.button.teal{background:var(--teal)}.button.light{background:white;color:var(--teal);border:1px solid var(--line)}.button:disabled{opacity:.5;cursor:not-allowed;transform:none}.home-bottom{border-top:1px solid var(--line);padding:24px 0;display:flex;align-items:center;justify-content:space-between;gap:20px}.home-bottom p{margin:0;color:var(--muted);font-size:14px}.page-head{padding:36px 0 26px}.back{border:0;background:transparent;color:var(--teal);font:inherit;font-weight:700;cursor:pointer;padding:0;margin-bottom:20px}.page-head h2{font-size:32px;letter-spacing:-.8px;margin:0 0 6px}.page-head p{margin:0;color:var(--muted)}.form-card,.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:24px;min-width:0}.form-card{max-width:650px}.field{margin-bottom:20px}.field label,label{display:block;font-size:13px;font-weight:750;color:#515a60;margin:0 0 7px}.field input,.field textarea,input,textarea{width:100%;border:1px solid #d7dce0;background:#fff;color:var(--ink);border-radius:8px;padding:12px;font:inherit}.field textarea{min-height:90px;resize:vertical}.hint,.sub,.small{color:var(--muted);font-size:13px}.hint{margin:6px 0 0}.swatches{display:flex;gap:10px;align-items:center;margin:14px 0 24px}.swatches .swatch{height:28px;max-width:58px;border-radius:7px}.form-actions{display:flex;gap:10px;flex-wrap:wrap}.training-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding-bottom:24px}.panel h2{font-size:19px;margin:0}.sub{margin:5px 0 18px}.section-head{display:flex;gap:11px;align-items:center;margin-bottom:20px}.section-head .sub{margin:2px 0 0}.step{width:34px;height:34px;border-radius:10px;background:#e8f3f5;color:var(--teal);display:grid;place-items:center;font-weight:800;flex-shrink:0}.step.pink{background:#fff0f4;color:var(--pink)}textarea#corpus{min-height:235px;resize:vertical;font-size:14px;line-height:1.65}.row{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.row button{flex:1}.bar{height:6px;background:#edf0f2;border-radius:10px;overflow:hidden;margin-top:16px}.bar span{display:block;height:100%;width:0;background:var(--green);transition:width .15s}.status{font-size:13px;color:var(--muted);min-height:20px;margin-top:9px}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.metric{background:#f8f9f9;border:1px solid var(--line);padding:10px;border-radius:9px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:19px}.advanced{border-top:1px solid var(--line);margin-top:18px;padding-top:13px}.advanced summary{cursor:pointer;font-size:13px;font-weight:750;color:var(--teal)}.advanced label{margin-top:14px}.range{display:grid;grid-template-columns:1fr 58px;gap:10px;align-items:center;margin:8px 0}.range input{padding:0;accent-color:var(--pink)}output{background:#f8f9f9;border:1px solid var(--line);border-radius:7px;text-align:center;padding:3px;font-size:13px}.chat{height:270px;overflow:auto;background:#f8f9f9;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}.bubble{max-width:95%;padding:10px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}.user{align-self:flex-end;background:#e8f3f5}.bot{align-self:flex-start;background:white;border:1px solid var(--line)}.bubble small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px;font-weight:800}.chatinput{display:flex;gap:8px;margin-top:10px}.chatinput input{flex:1;min-width:0}.chatinput button{flex:0 0 auto}#probs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.chip{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;background:white}.chip b{color:var(--pink)}.model-chip{margin-left:auto;background:#f0f5f5;color:var(--teal);font-size:12px;font-weight:750;border-radius:20px;padding:7px 11px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.statusline{background:#edf6f6;border-radius:9px;padding:11px 13px;font-size:13px;color:var(--teal);margin-bottom:18px}.dataset-summary{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f7f9f9;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:14px}.doc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}.document-card{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;min-width:0;transition:border-color .15s,box-shadow .15s}.document-card.open{grid-column:1/-1;border-color:#b8cdd1;box-shadow:0 3px 12px #243b4210}.doc-head{display:flex;align-items:center;gap:7px;margin-bottom:0}.doc-open{width:100%;min-height:106px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:0;background:transparent;color:var(--ink);cursor:pointer;padding:7px 3px;text-align:center}.doc-icon{width:44px;height:44px;border-radius:12px;background:#e8f3f5;display:grid;place-items:center;font-size:24px}.doc-icon.dialogue{background:#fff0f4}.doc-card-title{font-size:12px;font-weight:750;line-height:1.3;overflow-wrap:anywhere;max-width:100%}.doc-card-meta{font-size:10px;color:var(--muted)}.doc-editor{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:9px}.document-card.open .doc-editor{display:block}.doc-title-input{font-weight:750;min-width:0;flex:1;padding:8px 9px!important}.doc-delete{background:white;color:#a43a56;border:1px solid #f0dce2;padding:7px 9px;border-radius:7px;flex:0 0 auto}.doc-field{margin-top:9px}.doc-field label{font-size:12px;margin-bottom:5px}.doc-field textarea{min-height:84px;padding:9px;font-size:13px;resize:vertical}.doc-field input{font-size:13px;padding:9px}.doc-help{font-size:11px;color:var(--muted);margin-top:7px}.dataset-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.dataset-actions .button{flex:1;font-size:13px;padding:10px 12px}.metrics .metric{min-width:0}.metric strong{overflow-wrap:anywhere}.doc-empty{border:1px dashed #cfd7da;border-radius:10px;padding:18px;text-align:center;font-size:13px;color:var(--muted)}.raw-output{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:12px;color:var(--muted)}.raw-output summary{cursor:pointer;font-weight:700;color:var(--teal)}.raw-output p{white-space:pre-wrap;margin:7px 0 0;color:var(--ink);font-size:13px}.model-storage{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;margin:10px 0 22px}.model-storage summary{cursor:pointer;font-weight:800;color:var(--teal)}.model-storage-body{padding-top:14px}.model-storage-controls{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end}.model-storage-controls label{font-size:12px}.model-storage-controls input{min-width:0}.saved-model-list{display:grid;gap:8px;margin-top:13px}.saved-model-card{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0}.saved-model-info{min-width:0}.saved-model-title{font-weight:750;overflow-wrap:anywhere}.saved-model-meta{font-size:12px;color:var(--muted)}.saved-model-actions{display:flex;gap:6px;flex-shrink:0}.saved-model-actions .button{padding:7px 10px;font-size:12px}.saved-empty{font-size:13px;color:var(--muted);padding:9px 2px}.footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0}.hidden{display:none!important}@media(max-width:720px){header{height:70px;padding:0 14px}.brandmark{width:43px;height:43px}.brand h1{font-size:16px}.brand p{font-size:11px}.top-actions button{padding:7px 9px;font-size:12px}.page{min-height:calc(100vh - 70px);padding:0 15px 32px}.home-hero{grid-template-columns:1fr;gap:25px;padding:45px 0 36px}.home-hero h2{font-size:43px;letter-spacing:-1.5px}.home-hero p{font-size:16px}.art-card{min-height:190px;padding:22px}.art-card .bigmark{font-size:48px}.home-bottom{align-items:flex-start;flex-direction:column}.page-head{padding:26px 0 20px}.page-head h2{font-size:27px}.form-card,.panel{padding:17px}.training-layout{grid-template-columns:1fr;gap:14px}textarea#corpus{min-height:190px}.doc-field textarea{min-height:78px}.dataset-actions{flex-direction:column}.doc-head{gap:6px}.doc-title-input{font-size:13px!important}.chat{height:250px}.model-chip{max-width:40%}}
 </style></head><body>
 <header><div class="brandmark"><span>ROBO</span><span class="letters"><b>E</b><i>D</i><em>U</em><strong>C</strong></span></div><div class="brand"><h1>RoboEduc AI Create</h1><p>Laboratório de inteligência artificial</p></div><div class="top-actions"><button id="homeNav" class="button light">Início</button></div></header>
 <section class="page active" id="page-home"><div class="container"><div class="home-hero"><div><div class="eyebrow">Aprender · Criar · Experimentar</div><h2>Ideias viram <span class="color-word">inteligência.</span></h2><p>Crie seu próprio modelo de linguagem, ensine com seus textos e veja o que ele aprende.</p><button class="button" id="startCreate">Criar modelo <span aria-hidden="true">→</span></button></div><div class="art-card"><div class="bigmark">R<span style="color:var(--pink)">A</span><span style="color:var(--yellow)">I</span></div><div><strong>Seu laboratório de IA</strong><br><small>Um experimento de cada vez.</small><div class="palette"><span class="swatch" style="background:var(--pink)"></span><span class="swatch" style="background:var(--blue)"></span><span class="swatch" style="background:var(--yellow)"></span><span class="swatch" style="background:var(--green)"></span><span class="swatch" style="background:var(--teal)"></span></div></div></div></div><div class="home-bottom"><p>Um espaço simples para explorar como modelos aprendem padrões em textos.</p><button class="button light" id="homeCreate">Começar agora →</button></div></div></section>
@@ -14,22 +14,75 @@
 <div class="dataset-actions"><button id="importDocs" class="button light">Importar biblioteca JSON</button><button id="exportDocs" class="button light">Exportar biblioteca</button><input id="importDocsFile" type="file" accept=".json,application/json" hidden></div>
 <p class="hint">Cada cartão é um documento separado. O modelo aprende dos textos e dos diálogos. Para ensinar a responder, adicione diálogos com perguntas variadas e respostas corretas.</p>
 <div class="row"><button id="train">Treinar do zero</button><button id="reset" class="alt">Reiniciar</button></div><div class="bar"><span id="bar"></span></div><div id="status" class="status">Carregando TensorFlow.js…</div>
-<details class="advanced metrics-details"><summary>Ver métricas do treinamento</summary><div class="metrics"><div class="metric"><small>Vocabulário</small><strong id="vocab">—</strong></div><div class="metric"><small>Parâmetros</small><strong id="params">—</strong></div><div class="metric"><small>Loss treino</small><strong id="loss">—</strong></div><div class="metric"><small>Loss validação</small><strong id="valLoss">—</strong></div></div></details>
+<details class="advanced metrics-details"><summary>Ver métricas do treinamento</summary><div class="metrics"><div class="metric"><small>Vocabulário</small><strong id="vocab">—</strong></div><div class="metric"><small>Parâmetros</small><strong id="params">—</strong></div><div class="metric"><small>Loss treino</small><strong id="loss">—</strong></div><div class="metric"><small>Loss validação</small><strong id="valLoss">—</strong></div><div class="metric"><small>Acerto de tokens (val.)</small><strong id="valAccuracy">—</strong></div></div></details>
 <details class="advanced"><summary>Configurações avançadas</summary><label for="epochs">Épocas</label><div class="range"><input id="epochs" type="range" min="1" max="40" value="8"><output id="epochsOut">8</output></div><label for="context">Janela de contexto</label><div class="range"><input id="context" type="range" min="4" max="24" step="4" value="12"><output id="contextOut">12</output></div><label for="lr">Taxa de aprendizado</label><div class="range"><input id="lr" type="range" min="1" max="20" value="8"><output id="lrOut">0.0008</output></div></details></section>
 <section class="panel"><div class="section-head"><span class="step pink">02</span><div><h2>Testar o modelo</h2><p class="sub">Experimente uma pergunta ou frase inicial.</p></div></div>
-<div class="chat" id="chat"><div class="bubble bot"><small>MINI GPT</small>Treine o modelo com textos e diálogos próprios. Ele pode errar: observe como os exemplos afetam as respostas.</div></div>
+<div class="chat" id="chat"><div class="bubble bot"><small class="assistant-label">Meu primeiro modelo</small>Treine o modelo com textos e diálogos próprios. Ele pode errar: observe como os exemplos afetam as respostas.</div></div>
 <div class="chatinput"><input id="prompt" maxlength="200" placeholder="Ex.: O robô" autocomplete="off"><button id="send" disabled>Gerar</button></div>
 <details class="advanced"><summary>Parâmetros de geração</summary><label for="temperature">Temperatura</label><div class="range"><input id="temperature" type="range" min="1" max="20" value="8"><output id="tempOut">0.8</output></div><label for="maxTokens">Máximo de tokens</label><div class="range"><input id="maxTokens" type="range" min="8" max="64" step="4" value="24"><output id="maxOut">24</output></div><label for="topk">Top-k</label><div class="range"><input id="topk" type="range" min="1" max="20" value="8"><output id="topkOut">8</output></div><label>Próximos tokens prováveis</label><div id="probs" class="small">Disponível após o treinamento.</div><div id="genStatus" class="status"></div></details>
 <div class="row"><button class="alt" id="clear">Limpar conversa</button><button class="alt" id="save">Salvar textos</button></div></section>
-</div><div class="footer">RoboEduc AI Create · Protótipo experimental</div></div></section>
+</div><details class="model-storage" id="modelStorage"><summary>Salvar, carregar e gerenciar modelos</summary><div class="model-storage-body"><p class="hint">Os pesos treinados, o vocabulário, a tokenização e os documentos são salvos neste navegador e neste dispositivo.</p><div class="model-storage-controls"><div><label for="saveModelName">Nome do modelo salvo</label><input id="saveModelName" maxlength="48" placeholder="Ex.: Robô Explorador"></div><button id="saveModel" class="button teal" disabled>Salvar modelo</button><button id="refreshModels" class="button light">Atualizar lista</button></div><div id="savedModels" class="saved-model-list"><div class="saved-empty">Carregando modelos salvos…</div></div></div></details><div class="footer">RoboEduc AI Create · Protótipo experimental</div></div></section>
 <script>
 
 const $=id=>document.getElementById(id), status=(s,k='')=>{$('status').textContent=s;$('status').style.color=k==='good'?'#73e0c1':k==='warn'?'#ffd27d':''};
 const SPECIAL_RE=/<\|(?:pad|unk|conhecimento|titulo|conteudo|dialogo|usuario|assistente|fim_doc)\|>|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]/giu;
 const SPECIAL={pad:"<|pad|>",unk:"<|unk|>",knowledge:"<|conhecimento|>",title:"<|titulo|>",content:"<|conteudo|>",dialogue:"<|dialogo|>",user:"<|usuario|>",assistant:"<|assistente|>",end:"<|fim_doc|>"};
-const tokenize=s=>(s.match(SPECIAL_RE)||[]).map(t=>t.startsWith("<|")?t:t.toLocaleLowerCase("pt-BR"));
+let subwordMerges=[],subwordCache=new Map(),subwordBaseTokens=[];
+const baseTokenize=s=>(s.match(SPECIAL_RE)||[]).map(t=>t.startsWith("<|")?t:t.toLocaleLowerCase("pt-BR"));
+function encodeSubwordWord(word){
+ if(subwordCache.has(word))return subwordCache.get(word).slice();
+ let pieces=Array.from("▁"+word);
+ for(const pair of subwordMerges){
+  const next=[];
+  for(let i=0;i<pieces.length;i++){
+   if(i+1<pieces.length&&pieces[i]===pair[0]&&pieces[i+1]===pair[1]){next.push(pair[0]+pair[1]);i++}
+   else next.push(pieces[i])
+  }
+  pieces=next
+ }
+ subwordCache.set(word,pieces);
+ return pieces.slice()
+}
+function tokenize(s){
+ return baseTokenize(s).flatMap(t=>{
+  if(t.startsWith("<|"))return [t];
+  if(/^[\p{L}\p{N}_]+$/u.test(t))return encodeSubwordWord(t);
+  return [t]
+ })
+}
+function learnSubwordTokenizer(docs){
+ const wordSequences=[],baseTokens=new Set();
+ for(const doc of docs.filter(isReadyDocument)){
+  const title=(doc.title||"").trim();
+  const texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
+  for(const text of texts)for(const token of baseTokenize(text))if(/^[\p{L}\p{N}_]+$/u.test(token)){
+   const chars=Array.from("▁"+token);chars.forEach(c=>baseTokens.add(c));wordSequences.push(chars)
+  }
+ }
+ subwordMerges=[];
+ for(let iteration=0;iteration<192;iteration++){
+  const counts=new Map();
+  for(const seq of wordSequences)for(let i=0;i<seq.length-1;i++){
+   const key=JSON.stringify([seq[i],seq[i+1]]),entry=counts.get(key);
+   if(entry)entry.count++;else counts.set(key,{left:seq[i],right:seq[i+1],count:1})
+  }
+  let best=null;
+  for(const entry of counts.values())if(entry.count>=2&&(!best||entry.count>best.count))best=entry;
+  if(!best)break;
+  subwordMerges.push([best.left,best.right]);
+  for(let n=0;n<wordSequences.length;n++){
+   const seq=wordSequences[n],next=[];
+   for(let i=0;i<seq.length;i++){
+    if(i+1<seq.length&&seq[i]===best.left&&seq[i+1]===best.right){next.push(seq[i]+seq[i+1]);i++}
+    else next.push(seq[i])
+   }
+   wordSequences[n]=next
+  }
+ }
+ subwordBaseTokens=[...baseTokens];subwordCache=new Map()
+}
 const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const D=32,H=4,L=2;let model=null,opt=null,tokenToId=null,idToToken=null,trained=false,busy=false,documents=[];
+const D=32,H=4,L=2;let model=null,opt=null,tokenToId=null,idToToken=null,trained=false,busy=false,documents=[];let activeModelName=localStorage.getItem("roboeduc-ai-model-name")||"Meu primeiro modelo";let modelDbPromise=null;
 function makeId(){return "doc-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7)}
 const DEFAULT_DOCUMENTS=[
 {id:"seed-1",title:"Pão",kind:"knowledge",content:"Pão é um alimento feito geralmente com farinha, água e fermento. A massa descansa e depois é assada no forno. Existem vários tipos, como pão francês, pão integral e pão de forma."},
@@ -70,7 +123,7 @@ function sequencesForDocument(d){
 function tokensForDocument(d){return sequencesForDocument(d).flat()}
 function invalidateModel(){
  if(model){model.dispose();model=null}if(opt){opt.dispose();opt=null}trained=false;$("send").disabled=true;
- if($("vocab"))$("vocab").textContent=$("params").textContent=$("loss").textContent=$("valLoss").textContent="—";
+ if($("vocab"))$("vocab").textContent=$("params").textContent=$("loss").textContent=$("valLoss").textContent=$("valAccuracy").textContent="—";
  if($("bar"))$("bar").style.width="0%"
 }
 function saveDocuments(){
@@ -115,7 +168,7 @@ function renderDocuments(){
  updateDatasetSummary()
 }
 function bindDatasetEditor(){
- documents=loadDocuments();renderDocuments();
+ documents=loadDocuments();learnSubwordTokenizer(documents);renderDocuments();
  $("addKnowledge").onclick=()=>{documents.push({id:makeId(),title:"Novo conhecimento",kind:"knowledge",content:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
  $("addDialogue").onclick=()=>{documents.push({id:makeId(),title:"Novo diálogo",kind:"dialogue",prompt:"",response:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
  $("exportDocs").onclick=()=>{const payload={format:"roboeduc-ai-documents-v1",modelName:localStorage.getItem("roboeduc-ai-model-name")||"Meu modelo",documents};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="biblioteca-roboeduc-ai.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status("Biblioteca exportada como JSON.","good")};
@@ -124,10 +177,11 @@ function bindDatasetEditor(){
 }
 function dataset(docs,requestedContext){
  const ready=docs.filter(isReadyDocument);if(ready.length<2)throw Error("Adicione pelo menos dois documentos completos para treinar.");
+ learnSubwordTokenizer(ready);
  const seen=new Set(),encoded=[];let duplicates=0;
  for(const doc of ready){const sequences=sequencesForDocument(doc),key=sequences.map(t=>t.join(" ")).join(" || ");if(seen.has(key)){duplicates++;continue}seen.add(key);if(sequences.some(t=>t.length>=2))encoded.push({doc,sequences})}
  if(encoded.length<2)throw Error("Adicione mais textos diferentes.");
- const allSequences=encoded.flatMap(item=>item.sequences),vocab=[SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant,SPECIAL.end,...allSequences.flat()];
+ const allSequences=encoded.flatMap(item=>item.sequences),vocab=[SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant,SPECIAL.end,...subwordBaseTokens,...allSequences.flat()];
  idToToken=[...new Set(vocab)];tokenToId=Object.fromEntries(idToToken.map((t,i)=>[t,i]));const padId=tokenToId[SPECIAL.pad],unkId=tokenToId[SPECIAL.unk];
  const ctx=Math.max(2,Math.min(requestedContext,Math.max(...allSequences.map(tokens=>tokens.length-1))));
  function samplesFor(items){const samples=[];for(const item of items)for(const tokens of item.sequences){const ids=tokens.map(t=>tokenToId[t]??unkId);const assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]);for(let pos=1;pos<ids.length;pos++){const start=Math.max(0,pos-ctx),prev=ids.slice(start,pos),next=ids.slice(start+1,pos+1),pad=ctx-prev.length;const targetMask=Array.from({length:next.length},(_,j)=>assistantIndex<0||start+1+j>assistantIndex?1:0);if(targetMask.some(Boolean))samples.push({x:Array(pad).fill(padId).concat(prev),y:Array(pad).fill(padId).concat(next),mask:Array(pad).fill(0).concat(targetMask)})}}return samples}
@@ -150,29 +204,155 @@ function evaluateLoss(samples,limit=96){
  for(let i=0;i<chosen.length;i+=bs){const batch=chosen.slice(i,i+bs),x=tf.tensor2d(batch.map(s=>s.x),[batch.length,model.C],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[batch.length,model.C],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[batch.length,model.C],"float32"),cost=makeLoss(x,y,mw),w=batch.reduce((n,s)=>n+s.mask.reduce((a,v)=>a+v,0),0);total+=cost.dataSync()[0]*w;count+=w;cost.dispose();x.dispose();y.dispose();mw.dispose()}
  return count?total/count:null
 }
+function evaluateAccuracy(samples,limit=12){
+ if(!samples.length)return null;
+ const chosen=samples.length>limit?samples.filter((_,i)=>i%Math.ceil(samples.length/limit)===0).slice(0,limit):samples;
+ let correct=0,count=0,bs=4;
+ for(let i=0;i<chosen.length;i+=bs){
+  const batch=chosen.slice(i,i+bs),n=batch.length;
+  const x=tf.tensor2d(batch.map(s=>s.x),[n,model.C],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,model.C],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,model.C],"float32");
+  const pred=tf.tidy(()=>model.forward(x).argMax(-1));
+  const p=pred.dataSync(),truth=y.dataSync(),mask=mw.dataSync();
+  for(let j=0;j<p.length;j++)if(mask[j]>0){count++;if(p[j]===truth[j])correct++}
+  pred.dispose();x.dispose();y.dispose();mw.dispose()
+ }
+ return count?correct/count:null
+}
 async function train(){
  if(busy)return;busy=true;trained=false;$("train").disabled=true;$("send").disabled=true;
  try{
   await tf.ready();if(model)model.dispose();if(opt)opt.dispose();const d=dataset(documents,+$("context").value);model=createModel(idToToken.length,d.ctx);opt=tf.train.adam(+$("lr").value/10000);
-  $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";
+  $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";$("valAccuracy").textContent=d.validationSamples.length?"—":"N/D";$("saveModel").disabled=true;
   const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(80,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
   for(let ep=0;ep<epochs;ep++){let lastLoss=0;const shuffled=d.trainSamples.slice().sort(()=>Math.random()-.5),epochSamples=shuffled.slice(0,Math.min(shuffled.length,bs*steps));let actualSteps=0;
    for(let start=0;start<epochSamples.length;start+=bs){const batch=epochSamples.slice(start,start+bs),n=batch.length;const x=tf.tensor2d(batch.map(s=>s.x),[n,d.ctx],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,d.ctx],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,d.ctx],"float32"),cost=opt.minimize(()=>makeLoss(x,y,mw),true);lastLoss+=cost.dataSync()[0];actualSteps++;cost.dispose();x.dispose();y.dispose();mw.dispose();await tf.nextFrame()}lastLoss/=Math.max(1,actualSteps);
    $("bar").style.width=((ep+1)/epochs*100)+"%";$("loss").textContent=lastLoss.toFixed(3);
-   if(d.validationSamples.length&&(ep===0||(ep+1)%Math.max(1,Math.ceil(epochs/4))===0||ep===epochs-1)){const val=evaluateLoss(d.validationSamples,24);$("valLoss").textContent=val===null?"N/D":val.toFixed(3)}
+   if(d.validationSamples.length&&(ep===0||(ep+1)%Math.max(1,Math.ceil(epochs/4))===0||ep===epochs-1)){await tf.nextFrame();const val=evaluateLoss(d.validationSamples,16),acc=evaluateAccuracy(d.validationSamples,12);$("valLoss").textContent=val===null?"N/D":val.toFixed(3);$("valAccuracy").textContent=acc===null?"N/D":(acc*100).toFixed(1)+"%"}
    status("Treinando… época "+(ep+1)+"/"+epochs+" · "+d.trainSamples.length+" exemplos");await tf.nextFrame()
   }
   trained=true;$("send").disabled=false;const validation=Number($("valLoss").textContent),training=Number($("loss").textContent);const caution=Number.isFinite(validation)&&Number.isFinite(training)&&validation>training*2.5;status("Treinamento concluído. "+d.docCount+" documentos, "+d.sequenceCount+" sequências"+(d.duplicates?"; "+d.duplicates+" duplicados ignorados":"")+(d.incomplete?"; "+d.incomplete+" incompletos ignorados":"")+".",caution?"warn":"good");$("genStatus").textContent=caution?"A perda de validação ficou alta: o modelo ainda generaliza mal.":"A geração é produzida pelo modelo treinado. Compare respostas antes e depois de adicionar exemplos.";saveDocuments()
  }catch(e){console.error(e);status("Falha: "+e.message,"warn")}
- finally{busy=false;$("train").disabled=false;$("send").disabled=!trained}
+ finally{busy=false;$("train").disabled=false;$("send").disabled=!trained;$("saveModel").disabled=!trained}
 }
 function probs(seq,temp){const cut=seq.slice(-model.C),pad=model.C-cut.length,padded=Array(pad).fill(tokenToId[SPECIAL.pad]).concat(cut),x=tf.tensor2d([padded],[1,model.C],"int32"),p=tf.tidy(()=>tf.softmax(model.forward(x).slice([0,model.C-1,0],[1,1,model.V]).reshape([model.V]).div(temp))),a=Array.from(p.dataSync());p.dispose();x.dispose();return a}
 function sample(p,k){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
-function detokenize(tokens){const text=tokens.filter(t=>t&&!t.startsWith("<|")).join(" ").replace(/\s+([,.;:!?%…)\]}])/gu,"$1").replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))}
+function detokenize(tokens){
+ let text="";
+ for(const token of tokens){
+  if(!token||token.startsWith("<|"))continue;
+  if(token.startsWith("▁")){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(1)}
+  else if(/^[,.;:!?%…)\]}]/u.test(token))text+=token;
+  else if(/^[([{¿¡]/u.test(token)){if(text&&!/\s$/u.test(text))text+=" ";text+=token}
+  else text+=token
+ }
+ text=text.replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();
+ return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))
+}
+function chatLabelHtml(extra=""){return "<small>"+esc(activeModelName)+(extra?" · "+esc(extra):"")+"</small>"}
+function updateChatLabels(){document.querySelectorAll(".assistant-label").forEach(el=>el.textContent=activeModelName)}
+const MODEL_DB_NAME="roboeduc-ai-model-library";
+function openModelDB(){
+ if(modelDbPromise)return modelDbPromise;
+ modelDbPromise=new Promise((resolve,reject)=>{
+  if(!("indexedDB" in window)){reject(new Error("Este navegador não disponibiliza armazenamento local de modelos."));return}
+  const req=indexedDB.open(MODEL_DB_NAME,1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("models"))db.createObjectStore("models",{keyPath:"id"});if(!db.objectStoreNames.contains("payloads"))db.createObjectStore("payloads",{keyPath:"id"})};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Não foi possível abrir a biblioteca de modelos."))
+ });
+ return modelDbPromise
+}
+function saveModelRecord(meta,payload){
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").put(meta);tx.objectStore("payloads").put(payload);
+  tx.oncomplete=()=>resolve(meta);tx.onerror=()=>reject(tx.error||new Error("Falha ao gravar modelo."));tx.onabort=()=>reject(tx.error||new Error("Gravação cancelada."))
+ }))
+}
+function listModelRecords(){
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction("models","readonly"),req=tx.objectStore("models").getAll();
+  req.onsuccess=()=>resolve((req.result||[]).sort((a,b)=>b.savedAt-a.savedAt));req.onerror=()=>reject(req.error||new Error("Não foi possível listar modelos."))
+ }))
+}
+function loadModelRecord(id){
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction(["models","payloads"],"readonly"),metaReq=tx.objectStore("models").get(id),payloadReq=tx.objectStore("payloads").get(id);
+  tx.oncomplete=()=>{if(metaReq.result&&payloadReq.result)resolve({meta:metaReq.result,payload:payloadReq.result});else reject(new Error("O modelo salvo está incompleto ou foi removido."))};
+  tx.onerror=()=>reject(tx.error||new Error("Não foi possível carregar o modelo."))
+ }))
+}
+function deleteModelRecord(id){
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{
+  const tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").delete(id);tx.objectStore("payloads").delete(id);
+  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error("Não foi possível excluir o modelo."))
+ }))
+}
+function serializableWeights(){return Object.entries(model.vars).map(([name,v])=>({name,shape:Array.from(v.shape),values:Array.from(v.dataSync())}))}
+async function saveCurrentModel(){
+ if(!trained||!model||busy)return;
+ const button=$("saveModel");button.disabled=true;
+ try{
+  await tf.nextFrame();
+  const name=$("saveModelName").value.trim()||activeModelName||"Meu modelo",id=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():makeId();
+  const params=Object.values(model.vars).reduce((sum,v)=>sum+v.size,0),description=$("modelDescription").value.trim()||localStorage.getItem("roboeduc-ai-model-description")||"";
+  const meta={id,name,description,savedAt:Date.now(),vocabularySize:idToToken.length,params,context:model.C,loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent};
+  const payload={id,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
+  await saveModelRecord(meta,payload);$("saveModelName").value=name;activeModelName=name;localStorage.setItem("roboeduc-ai-model-name",name);localStorage.setItem("roboeduc-ai-model-description",description);updateChatLabels();
+  status("Modelo '"+name+"' salvo neste navegador.","good");await refreshSavedModels()
+ }catch(e){console.error(e);status("Não foi possível salvar o modelo: "+e.message,"warn")}
+ finally{button.disabled=!trained}
+}
+async function loadSavedModel(id){
+ if(busy)return;const loadButtons=$("savedModels").querySelectorAll("button");loadButtons.forEach(b=>b.disabled=true);
+ try{
+  status("Carregando modelo salvo…");await tf.ready();
+  const {meta,payload}=await loadModelRecord(id);
+  if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
+  invalidateModel();subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];subwordCache=new Map();
+  idToToken=payload.vocabulary.slice();tokenToId=Object.fromEntries(idToToken.map((token,index)=>[token,index]));model=createModel(idToToken.length,payload.context);
+  for(const item of payload.weights){
+   const target=model.vars[item.name];if(!target||JSON.stringify(target.shape)!==JSON.stringify(item.shape))throw new Error("Os pesos salvos não correspondem à arquitetura esperada ("+item.name+").");
+   const tensor=tf.tensor(item.values,item.shape,"float32");target.assign(tensor);tensor.dispose()
+  }
+  documents=Array.isArray(payload.documents)?payload.documents:documents;saveDocuments();renderDocuments();
+  const cfg=payload.settings||{};
+  for(const [control,value] of [["epochs",cfg.epochs],["context",cfg.requestedContext||payload.context],["lr",cfg.lr],["temperature",cfg.temperature],["maxTokens",cfg.maxTokens],["topk",cfg.topk]])if(value!==undefined&&$(control))$(control).value=value;
+  for(const [control,out,fmt] of [["epochs","epochsOut",v=>v],["context","contextOut",v=>v],["lr","lrOut",v=>(v/10000).toFixed(4)],["temperature","tempOut",v=>(v/10).toFixed(1)],["maxTokens","maxOut",v=>v],["topk","topkOut",v=>v]])$(out).textContent=fmt(+$ (control).value);
+  activeModelName=meta.name||"Meu modelo";$("modelName").value=activeModelName;$("saveModelName").value=activeModelName;
+  $("modelDescription").value=meta.description||"";$("trainHeading").textContent="Treinar: "+activeModelName;$("trainDescription").textContent=meta.description||"Modelo carregado da biblioteca local.";document.title=activeModelName+" · RoboEduc AI Create";
+  localStorage.setItem("roboeduc-ai-model-name",activeModelName);localStorage.setItem("roboeduc-ai-model-description",meta.description||"");updateChatLabels();
+  trained=true;$("send").disabled=false;$("train").disabled=false;$("saveModel").disabled=false;
+  $("vocab").textContent=meta.vocabularySize.toLocaleString("pt-BR");$("params").textContent=meta.params.toLocaleString("pt-BR");$("loss").textContent=meta.loss||payload.metrics?.loss||"—";$("valLoss").textContent=meta.valLoss||payload.metrics?.valLoss||"N/D";$("valAccuracy").textContent=meta.valAccuracy||payload.metrics?.valAccuracy||"N/D";
+  $("bar").style.width="100%";$("genStatus").textContent="Modelo carregado com pesos e tokenização salvos. Você pode testar respostas.";
+  status("Modelo '"+activeModelName+"' carregado com os pesos treinados.","good");
+  $("chat").innerHTML='<div class="bubble bot">'+chatLabelHtml()+'Modelo carregado. Faça uma pergunta para testar esta IA.</div>';
+ }catch(e){console.error(e);status("Falha ao carregar modelo: "+e.message,"warn");invalidateModel()}
+ finally{loadButtons.forEach(b=>b.disabled=false);$("send").disabled=!trained;$("saveModel").disabled=!trained}
+}
+async function removeSavedModel(id){
+ if(!window.confirm("Excluir este modelo salvo deste navegador?"))return;
+ try{await deleteModelRecord(id);await refreshSavedModels();status("Modelo excluído da biblioteca local.","good")}
+ catch(e){status("Não foi possível excluir o modelo: "+e.message,"warn")}
+}
+async function refreshSavedModels(){
+ const list=$("savedModels");if(!list)return;list.innerHTML='<div class="saved-empty">Carregando modelos salvos…</div>';
+ try{
+  const models=await listModelRecords();list.innerHTML="";
+  if(!models.length){list.innerHTML='<div class="saved-empty">Nenhum modelo salvo ainda. Treine uma IA e clique em “Salvar modelo”.</div>';return}
+  for(const meta of models){
+   const card=document.createElement("div");card.className="saved-model-card";const info=document.createElement("div");info.className="saved-model-info";
+   const title=document.createElement("div");title.className="saved-model-title";title.textContent=meta.name;
+   const details=document.createElement("div");details.className="saved-model-meta";details.textContent=new Date(meta.savedAt).toLocaleString("pt-BR")+" · vocabulário: "+meta.vocabularySize+" tokens · "+Number(meta.params).toLocaleString("pt-BR")+" parâmetros";
+   info.append(title,details);const actions=document.createElement("div");actions.className="saved-model-actions";
+   const load=document.createElement("button");load.className="button teal";load.type="button";load.textContent="Carregar";load.onclick=()=>loadSavedModel(meta.id);
+   const del=document.createElement("button");del.className="button light";del.type="button";del.textContent="Excluir";del.onclick=()=>removeSavedModel(meta.id);
+   actions.append(load,del);card.append(info,actions);list.appendChild(card)
+  }
+ }catch(e){list.innerHTML="";const msg=document.createElement("div");msg.className="saved-empty";msg.textContent="A biblioteca local não pôde ser aberta: "+e.message;list.appendChild(msg)}
+}
 async function generate(){
  if(!trained||busy)return;const prompt=$("prompt").value.trim();if(!prompt)return;
  const box=$("chat"),u=document.createElement("div");u.className="bubble user";u.innerHTML="<small>VOCÊ</small>"+esc(prompt);box.appendChild(u);
- const b=document.createElement("div");b.className="bubble bot";b.innerHTML="<small>MINI GPT</small>Gerando…";box.appendChild(b);$("send").disabled=true;
+ const b=document.createElement("div");b.className="bubble bot";b.innerHTML=chatLabelHtml("GERANDO");box.appendChild(b);$("send").disabled=true;
  try{
   const raw=tokenize(prompt);if(!raw.length)throw Error("Escreva uma pergunta ou frase inicial.");const known=raw.filter(t=>tokenToId[t]!==undefined).length;if(!known)throw Error("Ainda não há palavras dessa pergunta no vocabulário. Adicione exemplos sobre esse tema e treine novamente.");
   const input=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),blocked=new Set([SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant]);
@@ -183,11 +363,11 @@ async function generate(){
   for(let i=0;i<max;i++){
    const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
    const id=sample(adjusted,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);
-   if(i%2===1||i===max-1){b.innerHTML="<small>MINI GPT · GERANDO</small>"+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}
+   if(i%2===1||i===max-1){b.innerHTML=chatLabelHtml("GERANDO")+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}
    if(i<max-1)nextProb=probs(input,temp)
   }
   const rawModel=detokenize(out)||"Não consegui gerar uma continuação.";
-  b.innerHTML="<small>MINI GPT · GERAÇÃO DO MODELO</small>"+esc(rawModel);
+  b.innerHTML=chatLabelHtml()+esc(rawModel);
   const truncated=input.length>model.C;
   $("genStatus").textContent=truncated
    ?"A resposta veio dos pesos treinados. A janela é de "+model.C+" tokens; em perguntas longas, o começo pode ficar fora do contexto. Aumente a janela e treine novamente para testar perguntas maiores."
@@ -196,15 +376,15 @@ async function generate(){
 }
 $("train").onclick=train;$("train").onclick=train;$("send").onclick=generate;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")generate()});
 $("reset").onclick=()=>{invalidateModel();status("Modelo descartado; o próximo treino começa com pesos aleatórios.")};
-$("clear").onclick=()=>{$("chat").innerHTML='<div class="bubble bot"><small>MINI GPT</small>Conversa limpa. O modelo continua treinado.</div>'};
-$("save").onclick=()=>{saveDocuments();status("Biblioteca de documentos salva neste dispositivo.","good")};
+$("clear").onclick=()=>{$("chat").innerHTML='<div class="bubble bot">'+chatLabelHtml()+'Conversa limpa. O modelo continua treinado.</div>'};
+$("save").onclick=()=>{saveDocuments();status("Biblioteca de documentos salva neste dispositivo.","good")};$("saveModel").onclick=saveCurrentModel;$("refreshModels").onclick=refreshSavedModels;$("saveModelName").value=activeModelName;refreshSavedModels();
 for(let [id,out,fmt] of [["epochs","epochsOut",v=>v],["context","contextOut",v=>v],["lr","lrOut",v=>(v/10000).toFixed(4)],["temperature","tempOut",v=>(v/10).toFixed(1)],["maxTokens","maxOut",v=>v],["topk","topkOut",v=>v]])$(id).addEventListener("input",()=>$(out).textContent=fmt(+$ (id).value));
-bindDatasetEditor();
+bindDatasetEditor();activeModelName=localStorage.getItem("roboeduc-ai-model-name")||$("modelName").value||"Meu primeiro modelo";$("saveModelName").value=activeModelName;updateChatLabels();
 if(typeof tf!=="undefined")tf.ready().then(()=>status("Pronto. Revise os documentos e clique em Treinar do zero.","good")).catch(e=>status(e.message,"warn"));else status("TensorFlow.js não carregou. Verifique a conexão.","warn");
 </script>
 <script>
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));window.scrollTo({top:0,behavior:'instant'});if(id==='page-train')$('prompt').focus({preventScroll:true})}
 $('homeNav').onclick=()=>showPage('page-home');$('startCreate').onclick=$('homeCreate').onclick=()=>showPage('page-create');document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
+$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}activeModelName=name;$('saveModelName').value=name;updateChatLabels();$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
 const priorName=localStorage.getItem('roboeduc-ai-model-name');if(priorName)$('modelName').value=priorName;
 </script></body></html>
