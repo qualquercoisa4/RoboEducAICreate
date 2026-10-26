@@ -132,7 +132,7 @@ function norm(x,g,b){let m=x.mean(-1,true),v=x.sub(m).square().mean(-1,true);ret
 function createModel(V,C){
  let vars={},w=(n,s,z)=>vars[n]=variable(s,z),m={vars,V,C,blocks:[]};m.te=w("te",[V,D],.04);m.pe=w("pe",[C,D],.04);m.head=w("head",[D,V],1/Math.sqrt(D));m.hb=w("hb",[V],.01);
  for(let i=0;i<L;i++){let p="l"+i,b={q:w(p+"q",[D,D],.18),k:w(p+"k",[D,D],.18),v:w(p+"v",[D,D],.18),o:w(p+"o",[D,D],.18),g1:w(p+"g1",[D],.01),b1:w(p+"b1",[D],.01),f1:w(p+"f1",[D,D*2],.18),fb1:w(p+"fb1",[D*2],.01),f2:w(p+"f2",[D*2,D],.18),fb2:w(p+"fb2",[D],.01),g2:w(p+"g2",[D],.01),b2:w(p+"b2",[D],.01)};b.g1.assign(tf.ones([D]));b.g2.assign(tf.ones([D]));m.blocks.push(b)}
- m.forward=ids=>tf.tidy(()=>{let B=ids.shape[0],T=ids.shape[1],x=tf.gather(m.te,ids).add(tf.gather(m.pe,tf.range(0,T,1,"int32"))),attnMask=tf.tensor2d(Array.from({length:T},(_,i)=>Array.from({length:T},(_,j)=>j<=i?0:-1e9))),proj=(z,w,out)=>tf.matMul(z.reshape([-1,z.shape[2]]),w).reshape([B,T,out]);
+ m.forward=ids=>tf.tidy(()=>{let B=ids.shape[0],T=ids.shape[1],x=tf.gather(m.te,ids).add(tf.gather(m.pe,tf.range(0,T,1,"int32"))),causal=tf.tensor2d(Array.from({length:T},(_,i)=>Array.from({length:T},(_,j)=>j<=i?0:-1e9))).reshape([1,1,T,T]),padMask=tf.equal(ids,tokenToId[SPECIAL.pad]).cast("float32").mul(-1e9).reshape([B,1,1,T]),attnMask=causal.add(padMask),proj=(z,w,out)=>tf.matMul(z.reshape([-1,z.shape[2]]),w).reshape([B,T,out]);
  for(let b of m.blocks){let n=norm(x,b.g1,b.b1),reshape=z=>tf.transpose(tf.reshape(proj(n,z,D),[B,T,H,D/H]),[0,2,1,3]),q=reshape(b.q),k=reshape(b.k),v=reshape(b.v),a=tf.softmax(tf.matMul(q,k,false,true).div(Math.sqrt(D/H)).add(attnMask),-1),c=tf.reshape(tf.transpose(tf.matMul(a,v),[0,2,1,3]),[B,T,D]);x=x.add(proj(c,b.o,D));let ff=proj(norm(x,b.g2,b.b2),b.f1,D*2).add(b.fb1).relu();x=x.add(proj(ff,b.f2,D).add(b.fb2))}
  return proj(x,m.head,m.V).add(m.hb)});m.dispose=()=>Object.values(vars).forEach(v=>v.dispose());return m
 }
@@ -176,7 +176,7 @@ function findRelevantDocument(prompt){
  return best&&best.score>=3?best:null
 }
 function probs(seq,temp){const cut=seq.slice(-model.C),x=tf.tensor2d([cut],[1,cut.length],"int32"),p=tf.tidy(()=>tf.softmax(model.forward(x).slice([0,cut.length-1,0],[1,1,model.V]).reshape([model.V]).div(temp))),a=Array.from(p.dataSync());p.dispose();x.dispose();return a}
-function sample(p,k,temp){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))/temp),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
+function sample(p,k){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
 function detokenize(tokens){const text=tokens.filter(t=>t&&!t.startsWith("<|")).join(" ").replace(/\s+([,.;:!?%…)\]}])/gu,"$1").replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))}
 async function generate(){
  if(!trained||busy)return;const prompt=$("prompt").value.trim();if(!prompt)return;
@@ -188,7 +188,7 @@ async function generate(){
   const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;
   const initial=probs(input,temp).map((v,i)=>blocked.has(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
   const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(x.t)+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
-  for(let i=0;i<max;i++){const nextProb=probs(input,temp).map((v,j)=>blocked.has(idToToken[j])||(idToToken[j]===SPECIAL.end&&out.length<3)?0:v);const id=sample(nextProb,k,temp);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);if(i%3===0){b.innerHTML="<small>MINI GPT · GERANDO</small>"+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}}
+  for(let i=0;i<max;i++){const nextProb=probs(input,temp).map((v,j)=>blocked.has(idToToken[j])||(idToToken[j]===SPECIAL.end&&out.length<3)?0:v);const id=sample(nextProb,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);if(i%3===0){b.innerHTML="<small>MINI GPT · GERANDO</small>"+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}}
   const rawModel=detokenize(out)||"Não consegui gerar uma continuação.",match=findRelevantDocument(prompt);
   if(match){b.innerHTML="<small>RESPOSTA RECUPERADA DA BIBLIOTECA · "+esc(match.doc.title)+"</small>"+esc(match.answer)+'<details class="raw-output"><summary>Ver geração bruta do modelo</summary><p>'+esc(rawModel)+'</p></details>';$("genStatus").textContent="Resposta baseada no documento indicado. A geração bruta está disponível para comparação."}
   else{b.innerHTML="<small>MINI GPT · TREINADO DO ZERO</small>"+esc(rawModel);$("genStatus").textContent="Resposta gerada pelos pesos treinados. O modelo ainda pode errar."}
