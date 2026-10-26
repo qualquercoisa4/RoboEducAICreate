@@ -27,59 +27,31 @@
 const $=id=>document.getElementById(id), status=(s,k='')=>{$('status').textContent=s;$('status').style.color=k==='good'?'#73e0c1':k==='warn'?'#ffd27d':''};
 const SPECIAL_RE=/<\|(?:pad|unk|conhecimento|titulo|conteudo|dialogo|usuario|assistente|fim_doc)\|>|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]/giu;
 const SPECIAL={pad:"<|pad|>",unk:"<|unk|>",knowledge:"<|conhecimento|>",title:"<|titulo|>",content:"<|conteudo|>",dialogue:"<|dialogo|>",user:"<|usuario|>",assistant:"<|assistente|>",end:"<|fim_doc|>"};
-let subwordMerges=[],subwordCache=new Map(),subwordBaseTokens=[];
+let subwordMerges=[],subwordCache=new Map(),subwordBaseTokens=[],knownWholeWords=new Set();
+const WORD_TOKEN_PREFIX="¤";
 const baseTokenize=s=>(s.match(SPECIAL_RE)||[]).map(t=>t.startsWith("<|")?t:t.toLocaleLowerCase("pt-BR"));
 function encodeSubwordWord(word){
  if(subwordCache.has(word))return subwordCache.get(word).slice();
  let pieces=Array.from(word);if(pieces.length)pieces[0]="▁"+pieces[0];
- for(const pair of subwordMerges){
-  const next=[];
-  for(let i=0;i<pieces.length;i++){
-   if(i+1<pieces.length&&pieces[i]===pair[0]&&pieces[i+1]===pair[1]){next.push(pair[0]+pair[1]);i++}
-   else next.push(pieces[i])
-  }
-  pieces=next
- }
- subwordCache.set(word,pieces);
- return pieces.slice()
+ for(const pair of subwordMerges){const next=[];for(let i=0;i<pieces.length;i++){if(i+1<pieces.length&&pieces[i]===pair[0]&&pieces[i+1]===pair[1]){next.push(pair[0]+pair[1]);i++}else next.push(pieces[i])}pieces=next}
+ subwordCache.set(word,pieces);return pieces.slice()
 }
-function tokenize(s){
- return baseTokenize(s).flatMap(t=>{
-  if(t.startsWith("<|"))return [t];
-  if(/^[\p{L}\p{N}_]+$/u.test(t))return encodeSubwordWord(t);
-  return [t]
- })
-}
+function tokenize(s){return baseTokenize(s).flatMap(t=>{if(t.startsWith("<|"))return [t];if(/^[\p{L}\p{N}_]+$/u.test(t))return knownWholeWords.has(t)?[WORD_TOKEN_PREFIX+t]:encodeSubwordWord(t);return [t]})}
 function learnSubwordTokenizer(docs){
- const wordSequences=[],baseTokens=new Set();
+ const sequences=[],baseTokens=new Set(),wholeWords=new Set(),alphabet="abcdefghijklmnopqrstuvwxyzáàâãéêíóôõúüç0123456789_";
+ for(const c of Array.from(alphabet)){baseTokens.add("▁"+c);baseTokens.add(c)}
  for(const doc of docs.filter(isReadyDocument)){
-  const title=(doc.title||"").trim();
-  const texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
-  for(const text of texts)for(const token of baseTokenize(text))if(/^[\p{L}\p{N}_]+$/u.test(token)){
-   const chars=Array.from(token);if(chars.length)chars[0]="▁"+chars[0];chars.forEach(c=>baseTokens.add(c));wordSequences.push(chars)
-  }
+  const title=(doc.title||"").trim(),texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
+  for(const txt of texts)for(const token of baseTokenize(txt))if(/^[\p{L}\p{N}_]+$/u.test(token)){wholeWords.add(token);const chars=Array.from(token);if(chars.length)chars[0]="▁"+chars[0];chars.forEach(c=>baseTokens.add(c));sequences.push(chars)}
  }
  subwordMerges=[];
  for(let iteration=0;iteration<128;iteration++){
-  const counts=new Map();
-  for(const seq of wordSequences)for(let i=0;i<seq.length-1;i++){
-   const key=JSON.stringify([seq[i],seq[i+1]]),entry=counts.get(key);
-   if(entry)entry.count++;else counts.set(key,{left:seq[i],right:seq[i+1],count:1})
-  }
-  let best=null;
-  for(const entry of counts.values())if(entry.count>=2&&(!best||entry.count>best.count))best=entry;
-  if(!best)break;
-  subwordMerges.push([best.left,best.right]);
-  for(let n=0;n<wordSequences.length;n++){
-   const seq=wordSequences[n],next=[];
-   for(let i=0;i<seq.length;i++){
-    if(i+1<seq.length&&seq[i]===best.left&&seq[i+1]===best.right){next.push(seq[i]+seq[i+1]);i++}
-    else next.push(seq[i])
-   }
-   wordSequences[n]=next
-  }
+  const counts=new Map();for(const seq of sequences)for(let i=0;i<seq.length-1;i++){const key=JSON.stringify([seq[i],seq[i+1]]),v=counts.get(key);if(v)v.count++;else counts.set(key,{left:seq[i],right:seq[i+1],count:1})}
+  let best=null;for(const v of counts.values())if(v.count>=2&&(!best||v.count>best.count))best=v;
+  if(!best)break;subwordMerges.push([best.left,best.right]);
+  for(let n=0;n<sequences.length;n++){const seq=sequences[n],next=[];for(let i=0;i<seq.length;i++){if(i+1<seq.length&&seq[i]===best.left&&seq[i+1]===best.right){next.push(seq[i]+seq[i+1]);i++}else next.push(seq[i])}sequences[n]=next}
  }
- subwordBaseTokens=[...baseTokens];subwordCache=new Map()
+ knownWholeWords=wholeWords;subwordBaseTokens=[...baseTokens];subwordCache=new Map()
 }
 const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const D=32,H=4,L=2;let model=null,opt=null,tokenToId=null,idToToken=null,trained=false,busy=false,documents=[];let activeModelName=localStorage.getItem("roboeduc-ai-model-name")||"Meu primeiro modelo";let modelDbPromise=null,generating=false;
@@ -181,7 +153,7 @@ function dataset(docs,requestedContext){
  const seen=new Set(),encoded=[];let duplicates=0;
  for(const doc of ready){const sequences=sequencesForDocument(doc),key=sequences.map(t=>t.join(" ")).join(" || ");if(seen.has(key)){duplicates++;continue}seen.add(key);if(sequences.some(t=>t.length>=2))encoded.push({doc,sequences})}
  if(encoded.length<2)throw Error("Adicione mais textos diferentes.");
- const allSequences=encoded.flatMap(item=>item.sequences),vocab=[SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant,SPECIAL.end,...subwordBaseTokens,...allSequences.flat()];
+ const allSequences=encoded.flatMap(item=>item.sequences),mergeTokens=subwordMerges.map(pair=>pair[0]+pair[1]),wordTokens=[...knownWholeWords].map(word=>WORD_TOKEN_PREFIX+word),vocab=[SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant,SPECIAL.end,...subwordBaseTokens,...mergeTokens,...wordTokens,...allSequences.flat()];
  idToToken=[...new Set(vocab)];tokenToId=Object.fromEntries(idToToken.map((t,i)=>[t,i]));const padId=tokenToId[SPECIAL.pad],unkId=tokenToId[SPECIAL.unk];
  const ctx=Math.max(2,Math.min(requestedContext,Math.max(...allSequences.map(tokens=>tokens.length-1))));
  function samplesFor(items){const samples=[];for(const item of items)for(const tokens of item.sequences){const ids=tokens.map(t=>tokenToId[t]??unkId);const assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]);for(let pos=1;pos<ids.length;pos++){const start=Math.max(0,pos-ctx),prev=ids.slice(start,pos),next=ids.slice(start+1,pos+1),pad=ctx-prev.length;const targetMask=Array.from({length:next.length},(_,j)=>assistantIndex<0||start+1+j>assistantIndex?1:0);if(targetMask.some(Boolean))samples.push({x:Array(pad).fill(padId).concat(prev),y:Array(pad).fill(padId).concat(next),mask:Array(pad).fill(0).concat(targetMask)})}}return samples}
@@ -238,53 +210,43 @@ function probs(seq,temp){const cut=seq.slice(-model.C),pad=model.C-cut.length,pa
 function sample(p,k){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
 function detokenize(tokens){
  let text="";
- for(const token of tokens){
-  if(!token||token.startsWith("<|"))continue;
-  if(token.startsWith("▁")){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(1)}
-  else if(/^[,.;:!?%…)\]}]/u.test(token))text+=token;
-  else if(/^[([{¿¡]/u.test(token)){if(text&&!/\s$/u.test(text))text+=" ";text+=token}
-  else text+=token
- }
+ for(const token of tokens){if(!token||token.startsWith("<|"))continue;if(token.startsWith(WORD_TOKEN_PREFIX)){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(WORD_TOKEN_PREFIX.length)}else if(token.startsWith("▁")){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(1)}else if(/^[,.;:!?%…)\]}]/u.test(token))text+=token;else if(/^[([{¿¡]/u.test(token)){if(text&&!/\s$/u.test(text))text+=" ";text+=token}else text+=token}
  text=text.replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();
  return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))
 }
 function chatLabelHtml(extra=""){return "<small>"+esc(activeModelName)+(extra?" · "+esc(extra):"")+"</small>"}
 function updateChatLabels(){document.querySelectorAll(".assistant-label").forEach(el=>el.textContent=activeModelName)}
 const MODEL_DB_NAME="roboeduc-ai-model-library";
+const MODEL_LOCAL_INDEX="roboeduc-ai-model-library-index";
+const MODEL_LOCAL_META=id=>"roboeduc-ai-model-meta:"+id;
+const MODEL_LOCAL_PAYLOAD=id=>"roboeduc-ai-model-payload:"+id;
 function openModelDB(){
  if(modelDbPromise)return modelDbPromise;
  modelDbPromise=new Promise((resolve,reject)=>{
-  if(!("indexedDB" in window)){reject(new Error("Este navegador não disponibiliza armazenamento local de modelos."));return}
-  const req=indexedDB.open(MODEL_DB_NAME,1);
+  if(!("indexedDB" in window)){reject(new Error("IndexedDB indisponível"));return}
+  let req;try{req=indexedDB.open(MODEL_DB_NAME,1)}catch(e){reject(e);return}
   req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("models"))db.createObjectStore("models",{keyPath:"id"});if(!db.objectStoreNames.contains("payloads"))db.createObjectStore("payloads",{keyPath:"id"})};
-  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("Não foi possível abrir a biblioteca de modelos."))
- });
- return modelDbPromise
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error("IndexedDB não abriu"));req.onblocked=()=>reject(new Error("Armazenamento bloqueado"))
+ });return modelDbPromise
 }
+function localModelIndex(){try{const v=JSON.parse(localStorage.getItem(MODEL_LOCAL_INDEX)||"[]");return Array.isArray(v)?v:[]}catch(e){return []}}
+function saveLocalModel(meta,payload){
+ const mk=MODEL_LOCAL_META(meta.id),pk=MODEL_LOCAL_PAYLOAD(meta.id),oldMeta=localStorage.getItem(mk),oldPayload=localStorage.getItem(pk),oldIndex=localStorage.getItem(MODEL_LOCAL_INDEX);
+ try{localStorage.setItem(pk,JSON.stringify(payload));localStorage.setItem(mk,JSON.stringify(meta));const idx=localModelIndex().filter(item=>item.id!==meta.id);idx.push({id:meta.id});localStorage.setItem(MODEL_LOCAL_INDEX,JSON.stringify(idx));return meta}
+ catch(e){try{if(oldPayload===null)localStorage.removeItem(pk);else localStorage.setItem(pk,oldPayload);if(oldMeta===null)localStorage.removeItem(mk);else localStorage.setItem(mk,oldMeta);if(oldIndex===null)localStorage.removeItem(MODEL_LOCAL_INDEX);else localStorage.setItem(MODEL_LOCAL_INDEX,oldIndex)}catch(_){}if(e&&e.name==="QuotaExceededError")throw new Error("O armazenamento do navegador está cheio. Exclua modelos antigos ou permita o IndexedDB.");throw new Error("O navegador recusou o salvamento local: "+(e&&e.message||"erro desconhecido"))}
+}
+function loadLocalModelList(){return localModelIndex().map(item=>{try{return JSON.parse(localStorage.getItem(MODEL_LOCAL_META(item.id))||"null")}catch(e){return null}}).filter(Boolean).sort((a,b)=>b.savedAt-a.savedAt)}
 function saveModelRecord(meta,payload){
- return openModelDB().then(db=>new Promise((resolve,reject)=>{
-  const tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").put(meta);tx.objectStore("payloads").put(payload);
-  tx.oncomplete=()=>resolve(meta);tx.onerror=()=>reject(tx.error||new Error("Falha ao gravar modelo."));tx.onabort=()=>reject(tx.error||new Error("Gravação cancelada."))
- }))
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{let tx;try{tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").put(meta);tx.objectStore("payloads").put(payload)}catch(e){reject(e);return}tx.oncomplete=()=>resolve(meta);tx.onerror=()=>reject(tx.error||new Error("Falha ao gravar modelo."));tx.onabort=()=>reject(tx.error||new Error("Gravação cancelada."))})).catch(err=>{console.warn("IndexedDB falhou; tentando armazenamento alternativo.",err);return saveLocalModel(meta,payload)})
 }
 function listModelRecords(){
- return openModelDB().then(db=>new Promise((resolve,reject)=>{
-  const tx=db.transaction("models","readonly"),req=tx.objectStore("models").getAll();
-  req.onsuccess=()=>resolve((req.result||[]).sort((a,b)=>b.savedAt-a.savedAt));req.onerror=()=>reject(req.error||new Error("Não foi possível listar modelos."))
- }))
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{let tx,req;try{tx=db.transaction("models","readonly");req=tx.objectStore("models").getAll()}catch(e){reject(e);return}req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error("Falha ao listar modelos"))})).then(models=>{const map=new Map();[...models,...loadLocalModelList()].forEach(meta=>map.set(meta.id,meta));return [...map.values()].sort((a,b)=>b.savedAt-a.savedAt)}).catch(err=>{console.warn("IndexedDB falhou; usando biblioteca alternativa.",err);return loadLocalModelList()})
 }
 function loadModelRecord(id){
- return openModelDB().then(db=>new Promise((resolve,reject)=>{
-  const tx=db.transaction(["models","payloads"],"readonly"),metaReq=tx.objectStore("models").get(id),payloadReq=tx.objectStore("payloads").get(id);
-  tx.oncomplete=()=>{if(metaReq.result&&payloadReq.result)resolve({meta:metaReq.result,payload:payloadReq.result});else reject(new Error("O modelo salvo está incompleto ou foi removido."))};
-  tx.onerror=()=>reject(tx.error||new Error("Não foi possível carregar o modelo."))
- }))
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{let tx,m,p;try{tx=db.transaction(["models","payloads"],"readonly");m=tx.objectStore("models").get(id);p=tx.objectStore("payloads").get(id)}catch(e){reject(e);return}tx.oncomplete=()=>{if(m.result&&p.result)resolve({meta:m.result,payload:p.result});else reject(new Error("Modelo não encontrado no IndexedDB"))};tx.onerror=()=>reject(tx.error||new Error("Falha ao carregar modelo"))})).catch(err=>{console.warn("IndexedDB falhou ao carregar; usando biblioteca alternativa.",err);let meta=null,payload=null;try{meta=JSON.parse(localStorage.getItem(MODEL_LOCAL_META(id))||"null");payload=JSON.parse(localStorage.getItem(MODEL_LOCAL_PAYLOAD(id))||"null")}catch(_){}if(meta&&payload)return {meta,payload};throw new Error("Modelo não encontrado neste navegador. "+(err&&err.message||""))})
 }
 function deleteModelRecord(id){
- return openModelDB().then(db=>new Promise((resolve,reject)=>{
-  const tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").delete(id);tx.objectStore("payloads").delete(id);
-  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error("Não foi possível excluir o modelo."))
- }))
+ return openModelDB().then(db=>new Promise((resolve,reject)=>{let tx;try{tx=db.transaction(["models","payloads"],"readwrite");tx.objectStore("models").delete(id);tx.objectStore("payloads").delete(id)}catch(e){reject(e);return}tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error("Falha ao excluir modelo"))})).catch(err=>{console.warn("IndexedDB falhou ao excluir; limpando biblioteca alternativa.",err)}).then(()=>{localStorage.removeItem(MODEL_LOCAL_META(id));localStorage.removeItem(MODEL_LOCAL_PAYLOAD(id));localStorage.setItem(MODEL_LOCAL_INDEX,JSON.stringify(localModelIndex().filter(item=>item.id!==id)))})
 }
 function serializableWeights(){return Object.entries(model.vars).map(([name,v])=>({name,shape:Array.from(v.shape),values:Array.from(v.dataSync())}))}
 async function saveCurrentModel(){
@@ -295,7 +257,7 @@ async function saveCurrentModel(){
   const name=$("saveModelName").value.trim()||activeModelName||"Meu modelo",id=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():makeId();
   const params=Object.values(model.vars).reduce((sum,v)=>sum+v.size,0),description=$("modelDescription").value.trim()||localStorage.getItem("roboeduc-ai-model-description")||"";
   const meta={id,name,description,savedAt:Date.now(),vocabularySize:idToToken.length,params,context:model.C,loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent};
-  const payload={id,tokenizerVersion:2,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
+  const payload={id,tokenizerVersion:3,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),knownWords:[...knownWholeWords],context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
   await saveModelRecord(meta,payload);$("saveModelName").value=name;$("modelName").value=name;$("trainHeading").textContent="Treinar: "+name;document.title=name+" · RoboEduc AI Create";activeModelName=name;localStorage.setItem("roboeduc-ai-model-name",name);localStorage.setItem("roboeduc-ai-model-description",description);updateChatLabels();
   status("Modelo '"+name+"' salvo neste navegador.","good");await refreshSavedModels()
  }catch(e){console.error(e);status("Não foi possível salvar o modelo: "+e.message,"warn")}
@@ -306,8 +268,8 @@ async function loadSavedModel(id){
  try{
   status("Carregando modelo salvo…");await tf.ready();
   const {meta,payload}=await loadModelRecord(id);
-  if(payload.tokenizerVersion!==2)throw new Error("Este modelo foi salvo com uma versão antiga da tokenização. Treine e salve novamente para usar o formato atualizado.");if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
-  invalidateModel();subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];subwordCache=new Map();
+  if(payload.tokenizerVersion!==3)throw new Error("Este modelo usa uma tokenização antiga. Treine e salve novamente para manter palavras e contexto compatíveis.");if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
+  invalidateModel();subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];knownWholeWords=new Set(Array.isArray(payload.knownWords)?payload.knownWords:[]);subwordCache=new Map();
   idToToken=payload.vocabulary.slice();tokenToId=Object.fromEntries(idToToken.map((token,index)=>[token,index]));model=createModel(idToToken.length,payload.context);
   for(const item of payload.weights){
    const target=model.vars[item.name];if(!target||JSON.stringify(target.shape)!==JSON.stringify(item.shape))throw new Error("Os pesos salvos não correspondem à arquitetura esperada ("+item.name+").");
@@ -347,7 +309,7 @@ async function refreshSavedModels(){
    const del=document.createElement("button");del.className="button light";del.type="button";del.textContent="Excluir";del.onclick=()=>removeSavedModel(meta.id);
    actions.append(load,del);card.append(info,actions);list.appendChild(card)
   }
- }catch(e){list.innerHTML="";const msg=document.createElement("div");msg.className="saved-empty";msg.textContent="A biblioteca local não pôde ser aberta: "+e.message;list.appendChild(msg)}
+ }catch(e){list.innerHTML="";const msg=document.createElement("div");msg.className="saved-empty";msg.textContent="Não foi possível abrir a biblioteca local: "+e.message+". O navegador pode estar bloqueando o armazenamento do site.";list.appendChild(msg)}
 }
 async function generate(){
  if(!trained||busy||generating)return;const prompt=$("prompt").value.trim();if(!prompt)return;generating=true;
