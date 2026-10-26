@@ -267,12 +267,12 @@ async function saveCurrentModel(){
  finally{button.disabled=!trained}
 }
 async function loadSavedModel(id){
- if(busy||generating)return;const loadButtons=$("savedModels").querySelectorAll("button");loadButtons.forEach(b=>b.disabled=true);
+ if(busy||generating)return;let replacedActiveModel=false;const loadButtons=$("savedModels").querySelectorAll("button");loadButtons.forEach(b=>b.disabled=true);
  try{
   status("Carregando modelo salvo…");await tf.ready();
   const {meta,payload}=await loadModelRecord(id);
   if(payload.tokenizerVersion!==3)throw new Error("Este modelo usa uma tokenização antiga. Treine e salve novamente para manter palavras e contexto compatíveis.");if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
-  invalidateModel();subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];knownWholeWords=new Set(Array.isArray(payload.knownWords)?payload.knownWords:[]);subwordCache=new Map();
+  invalidateModel();replacedActiveModel=true;subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];knownWholeWords=new Set(Array.isArray(payload.knownWords)?payload.knownWords:[]);subwordCache=new Map();
   idToToken=payload.vocabulary.slice();tokenToId=Object.fromEntries(idToToken.map((token,index)=>[token,index]));model=createModel(idToToken.length,payload.context);
   for(const item of payload.weights){
    const target=model.vars[item.name];if(!target||JSON.stringify(target.shape)!==JSON.stringify(item.shape))throw new Error("Os pesos salvos não correspondem à arquitetura esperada ("+item.name+").");
@@ -290,7 +290,7 @@ async function loadSavedModel(id){
   $("bar").style.width="100%";$("genStatus").textContent="Modelo carregado com pesos e tokenização salvos. Você pode testar respostas.";
   status("Modelo '"+activeModelName+"' carregado com os pesos treinados.","good");
   $("chat").innerHTML='<div class="bubble bot">'+chatLabelHtml()+'Modelo carregado. Faça uma pergunta para testar esta IA.</div>';
- }catch(e){console.error(e);status("Falha ao carregar modelo: "+e.message,"warn");invalidateModel()}
+ }catch(e){console.error(e);status("Falha ao carregar modelo: "+e.message,"warn");if(replacedActiveModel)invalidateModel()}
  finally{loadButtons.forEach(b=>b.disabled=false);$("send").disabled=!trained;$("saveModel").disabled=!trained}
 }
 async function removeSavedModel(id){
