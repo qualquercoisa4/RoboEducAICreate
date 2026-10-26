@@ -179,7 +179,7 @@ async function dataset(docs,requestedContext){
   let processed=0;
   for(const item of items)for(const sequence of item.sequences){
    const quota=Math.max(2,Math.floor(baseQuota*(item.doc.kind==="dialogue"?3:1)));
-   const ids=sequence.slice(0,MAX_SEQUENCE_TOKENS).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]),local=[];
+   const ids=sequence.slice(0,MAX_SEQUENCE_TOKENS).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]),local=[];let seenResponseSamples=0;
    for(let pos=1;pos<ids.length;pos++){
     const start=Math.max(0,pos-ctx),prev=ids.slice(start,pos),next=ids.slice(start+1,pos+1),pad=ctx-prev.length;
     const weights=Array.from({length:next.length},(_,j)=>{
@@ -190,18 +190,13 @@ async function dataset(docs,requestedContext){
     });
     if(weights.some(v=>v>0)){
      const sample={x:Array(pad).fill(tokenToId[SPECIAL.pad]).concat(prev),y:Array(pad).fill(tokenToId[SPECIAL.pad]).concat(next),mask:Array(pad).fill(0).concat(weights)};
-     if(local.length<quota)local.push(sample);else{const pick=Math.floor(Math.random()*(pos+1));if(pick<quota)local[pick]=sample}
+     seenResponseSamples++;if(local.length<quota)local.push(sample);else{const pick=Math.floor(Math.random()*seenResponseSamples);if(pick<quota)local[pick]=sample}
     }
     processed++;if(processed%64===0)await yieldToUI()
    }
    samples.push(...local);
    status("Preparando exemplos… "+label+" · "+samples.length+" selecionados");
    await yieldToUI()
-  }
-  if(samples.length>cap){
-   const dialogues=samples.filter((_,i)=>false);
-   const chosen=[];for(let i=0;i<samples.length;i++){if(i<cap)chosen.push(samples[i]);else{const j=Math.floor(Math.random()*(i+1));if(j<cap)chosen[j]=samples[i]}}
-   return chosen
   }
   return samples
  }
