@@ -82,7 +82,7 @@ function learnSubwordTokenizer(docs){
  subwordBaseTokens=[...baseTokens];subwordCache=new Map()
 }
 const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const D=32,H=4,L=2;let model=null,opt=null,tokenToId=null,idToToken=null,trained=false,busy=false,documents=[];let activeModelName=localStorage.getItem("roboeduc-ai-model-name")||"Meu primeiro modelo";let modelDbPromise=null;
+const D=32,H=4,L=2;let model=null,opt=null,tokenToId=null,idToToken=null,trained=false,busy=false,documents=[];let activeModelName=localStorage.getItem("roboeduc-ai-model-name")||"Meu primeiro modelo";let modelDbPromise=null,generating=false;
 function makeId(){return "doc-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7)}
 const DEFAULT_DOCUMENTS=[
 {id:"seed-1",title:"Pão",kind:"knowledge",content:"Pão é um alimento feito geralmente com farinha, água e fermento. A massa descansa e depois é assada no forno. Existem vários tipos, como pão francês, pão integral e pão de forma."},
@@ -219,7 +219,7 @@ function evaluateAccuracy(samples,limit=12){
  return count?correct/count:null
 }
 async function train(){
- if(busy)return;busy=true;trained=false;$("train").disabled=true;$("send").disabled=true;
+ if(busy||generating)return;busy=true;trained=false;$("train").disabled=true;$("send").disabled=true;
  try{
   await tf.ready();if(model)model.dispose();if(opt)opt.dispose();const d=dataset(documents,+$("context").value);model=createModel(idToToken.length,d.ctx);opt=tf.train.adam(+$("lr").value/10000);
   $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";$("valAccuracy").textContent=d.validationSamples.length?"—":"N/D";$("saveModel").disabled=true;
@@ -288,7 +288,7 @@ function deleteModelRecord(id){
 }
 function serializableWeights(){return Object.entries(model.vars).map(([name,v])=>({name,shape:Array.from(v.shape),values:Array.from(v.dataSync())}))}
 async function saveCurrentModel(){
- if(!trained||!model||busy)return;
+ if(!trained||!model||busy||generating)return;
  const button=$("saveModel");button.disabled=true;
  try{
   await tf.nextFrame();
@@ -302,7 +302,7 @@ async function saveCurrentModel(){
  finally{button.disabled=!trained}
 }
 async function loadSavedModel(id){
- if(busy)return;const loadButtons=$("savedModels").querySelectorAll("button");loadButtons.forEach(b=>b.disabled=true);
+ if(busy||generating)return;const loadButtons=$("savedModels").querySelectorAll("button");loadButtons.forEach(b=>b.disabled=true);
  try{
   status("Carregando modelo salvo…");await tf.ready();
   const {meta,payload}=await loadModelRecord(id);
@@ -350,7 +350,7 @@ async function refreshSavedModels(){
  }catch(e){list.innerHTML="";const msg=document.createElement("div");msg.className="saved-empty";msg.textContent="A biblioteca local não pôde ser aberta: "+e.message;list.appendChild(msg)}
 }
 async function generate(){
- if(!trained||busy)return;const prompt=$("prompt").value.trim();if(!prompt)return;
+ if(!trained||busy||generating)return;const prompt=$("prompt").value.trim();if(!prompt)return;generating=true;
  const box=$("chat"),u=document.createElement("div");u.className="bubble user";u.innerHTML="<small>VOCÊ</small>"+esc(prompt);box.appendChild(u);
  const b=document.createElement("div");b.className="bubble bot";b.innerHTML=chatLabelHtml("GERANDO");box.appendChild(b);$("send").disabled=true;
  try{
@@ -372,7 +372,7 @@ async function generate(){
   $("genStatus").textContent=truncated
    ?"A resposta veio dos pesos treinados. A janela é de "+model.C+" tokens; em perguntas longas, o começo pode ficar fora do contexto. Aumente a janela e treine novamente para testar perguntas maiores."
    :"A resposta veio dos pesos treinados, sem recuperar uma resposta pronta. O contexto agora usa o mesmo alinhamento do treinamento. O modelo ainda pode errar.";
- }catch(e){b.innerHTML="<small>AVISO</small>"+esc(e.message)}finally{$("send").disabled=!trained;box.scrollTop=box.scrollHeight}
+ }catch(e){b.innerHTML="<small>AVISO</small>"+esc(e.message)}finally{generating=false;$("send").disabled=!trained;box.scrollTop=box.scrollHeight}
 }
 $("train").onclick=train;$("train").onclick=train;$("send").onclick=generate;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")generate()});
 $("reset").onclick=()=>{invalidateModel();status("Modelo descartado; o próximo treino começa com pesos aleatórios.")};
