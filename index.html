@@ -12,7 +12,7 @@
 <div id="docList" class="doc-list"></div>
 <div class="dataset-actions"><button id="addKnowledge" class="button teal">+ Conhecimento</button><button id="addDialogue" class="button light">+ Diálogo de exemplo</button></div>
 <div class="dataset-actions"><button id="importDocs" class="button light">Importar biblioteca JSON</button><button id="exportDocs" class="button light">Exportar biblioteca</button><input id="importDocsFile" type="file" accept=".json,application/json" hidden></div>
-<p class="hint">Cada cartão é um documento separado. O modelo aprende dos textos e dos diálogos. Para ensinar a responder, adicione diálogos com perguntas variadas e respostas corretas.</p>
+<p class="hint">Cada cartão é um documento separado. O modelo aprende dos textos e dos diálogos. Palavras conhecidas permanecem inteiras; perguntas com palavras novas também são treinadas com subpalavras. Para ensinar respostas, adicione diálogos variados.</p>
 <div class="row"><button id="train">Treinar do zero</button><button id="reset" class="alt">Reiniciar</button></div><div class="bar"><span id="bar"></span></div><div id="status" class="status">Carregando TensorFlow.js…</div>
 <details class="advanced metrics-details"><summary>Ver métricas do treinamento</summary><div class="metrics"><div class="metric"><small>Vocabulário</small><strong id="vocab">—</strong></div><div class="metric"><small>Parâmetros</small><strong id="params">—</strong></div><div class="metric"><small>Loss treino</small><strong id="loss">—</strong></div><div class="metric"><small>Loss validação</small><strong id="valLoss">—</strong></div><div class="metric"><small>Acerto de tokens (val.)</small><strong id="valAccuracy">—</strong></div></div></details>
 <details class="advanced"><summary>Configurações avançadas</summary><label for="epochs">Épocas</label><div class="range"><input id="epochs" type="range" min="1" max="40" value="8"><output id="epochsOut">8</output></div><label for="context">Janela de contexto</label><div class="range"><input id="context" type="range" min="4" max="24" step="4" value="12"><output id="contextOut">12</output></div><label for="lr">Taxa de aprendizado</label><div class="range"><input id="lr" type="range" min="1" max="20" value="8"><output id="lrOut">0.0008</output></div></details></section>
@@ -37,6 +37,8 @@ function encodeSubwordWord(word){
  subwordCache.set(word,pieces);return pieces.slice()
 }
 function tokenize(s){return baseTokenize(s).flatMap(t=>{if(t.startsWith("<|"))return [t];if(/^[\p{L}\p{N}_]+$/u.test(t))return knownWholeWords.has(t)?[WORD_TOKEN_PREFIX+t]:encodeSubwordWord(t);return [t]})}
+function tokenizeSubword(s){return baseTokenize(s).flatMap(t=>{if(t.startsWith("<|"))return [t];if(/^[\p{L}\p{N}_]+$/u.test(t))return encodeSubwordWord(t);return [t]})}
+
 function learnSubwordTokenizer(docs){
  const sequences=[],baseTokens=new Set(),wholeWords=new Set(),alphabet="abcdefghijklmnopqrstuvwxyzáàâãéêíóôõúüç0123456789_";
  for(const c of Array.from(alphabet)){baseTokens.add("▁"+c);baseTokens.add(c)}
@@ -85,12 +87,13 @@ function loadDocuments(){
  return seeded
 }
 function dialogueSequence(prompt,response){return tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt+" "+SPECIAL.assistant+" "+response+" "+SPECIAL.end)}
+function dialogueSequenceSubwordPrompt(prompt,response){return [...tokenizeSubword(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt),...tokenize(SPECIAL.assistant+" "+response+" "+SPECIAL.end)]}
 function sequencesForDocument(d){
- if(d.kind==="dialogue")return [dialogueSequence(d.prompt,d.response)];
+ if(d.kind==="dialogue")return [dialogueSequence(d.prompt,d.response),dialogueSequenceSubwordPrompt(d.prompt,d.response)];
  const title=(d.title||"").replace(/[?!.]+$/u,"").trim(),content=(d.content||"").trim();
  const base=tokenize(SPECIAL.knowledge+" "+SPECIAL.title+" "+title+" "+SPECIAL.content+" "+content+" "+SPECIAL.end);
  const prompts=["O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
- return [base,...prompts.map(q=>dialogueSequence(q,content))]
+ return [tokenizeSubword(SPECIAL.knowledge+" "+SPECIAL.title+" "+title+" "+SPECIAL.content+" "+content+" "+SPECIAL.end),base,...prompts.flatMap(q=>[dialogueSequence(q,content),dialogueSequenceSubwordPrompt(q,content)])]
 }
 function tokensForDocument(d){return sequencesForDocument(d).flat()}
 function invalidateModel(){
