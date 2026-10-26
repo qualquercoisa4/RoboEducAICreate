@@ -259,7 +259,7 @@ async function saveCurrentModel(){
   await tf.nextFrame();
   const name=$("saveModelName").value.trim()||activeModelName||"Meu modelo",id=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():makeId();
   const params=Object.values(model.vars).reduce((sum,v)=>sum+v.size,0),description=$("modelDescription").value.trim()||localStorage.getItem("roboeduc-ai-model-description")||"";
-  const meta={id,name,description,savedAt:Date.now(),vocabularySize:idToToken.length,params,context:model.C,loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent};
+  const meta={id,name,description,tokenizerVersion:3,savedAt:Date.now(),vocabularySize:idToToken.length,params,context:model.C,loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent};
   const payload={id,tokenizerVersion:3,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),knownWords:[...knownWholeWords],context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
   await saveModelRecord(meta,payload);$("saveModelName").value=name;$("modelName").value=name;$("trainHeading").textContent="Treinar: "+name;document.title=name+" · RoboEduc AI Create";activeModelName=name;localStorage.setItem("roboeduc-ai-model-name",name);localStorage.setItem("roboeduc-ai-model-description",description);updateChatLabels();
   status("Modelo '"+name+"' salvo neste navegador.","good");await refreshSavedModels()
@@ -306,7 +306,7 @@ async function refreshSavedModels(){
   for(const meta of models){
    const card=document.createElement("div");card.className="saved-model-card";const info=document.createElement("div");info.className="saved-model-info";
    const title=document.createElement("div");title.className="saved-model-title";title.textContent=meta.name;
-   const details=document.createElement("div");details.className="saved-model-meta";details.textContent=new Date(meta.savedAt).toLocaleString("pt-BR")+" · vocabulário: "+meta.vocabularySize+" tokens · "+Number(meta.params).toLocaleString("pt-BR")+" parâmetros";
+   const details=document.createElement("div");details.className="saved-model-meta";details.textContent=new Date(meta.savedAt).toLocaleString("pt-BR")+" · vocabulário: "+meta.vocabularySize+" tokens · "+Number(meta.params).toLocaleString("pt-BR")+" parâmetros"+(meta.tokenizerVersion===3?" · formato atual":" · versão anterior; pode exigir novo treino");
    info.append(title,details);const actions=document.createElement("div");actions.className="saved-model-actions";
    const load=document.createElement("button");load.className="button teal";load.type="button";load.textContent="Carregar";load.onclick=()=>loadSavedModel(meta.id);
    const del=document.createElement("button");del.className="button light";del.type="button";del.textContent="Excluir";del.onclick=()=>removeSavedModel(meta.id);
