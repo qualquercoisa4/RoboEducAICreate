@@ -191,6 +191,7 @@ async function dataset(docs,requestedContext){
  }
  let trainDocs=encoded,valDocs=[];
  if(encoded.length>=5){valDocs=encoded.filter((_,i)=>i%5===0);trainDocs=encoded.filter((_,i)=>i%5!==0)}
+ trainDocs.sort((a,b)=>(a.doc.kind==="dialogue"?0:1)-(b.doc.kind==="dialogue"?0:1));
  const trainSamples=await samplesFor(trainDocs,MAX_TRAIN_SAMPLES,"treino");
  const validationSamples=await samplesFor(valDocs,MAX_VALIDATION_SAMPLES,"validação");
  if(!trainSamples.length)throw Error("Os documentos não geraram exemplos de treino suficientes.");
@@ -232,7 +233,7 @@ async function train(){
   status("Preparando vocabulário e exemplos…");await yieldToUI();const d=await dataset(documents,+$("context").value);
   status("Criando rede neural…");await yieldToUI();if(model)model.dispose();if(opt)opt.dispose();model=createModel(idToToken.length,d.ctx);await yieldToUI();opt=tf.train.adam(+$("lr").value/10000);
   $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";$("valAccuracy").textContent=d.validationSamples.length?"—":"N/D";$("saveModel").disabled=true;
-  const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(24,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
+  const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(80,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
   for(let ep=0;ep<epochs;ep++){let lastLoss=0;const shuffled=d.trainSamples.slice().sort(()=>Math.random()-.5),epochSamples=shuffled.slice(0,Math.min(shuffled.length,bs*steps));let actualSteps=0;
    for(let start=0;start<epochSamples.length;start+=bs){const batch=epochSamples.slice(start,start+bs),n=batch.length;const x=tf.tensor2d(batch.map(s=>s.x),[n,d.ctx],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,d.ctx],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,d.ctx],"float32"),cost=opt.minimize(()=>makeLoss(x,y,mw),true);lastLoss+=cost.dataSync()[0];actualSteps++;cost.dispose();x.dispose();y.dispose();mw.dispose();if(actualSteps%4===0||start+n>=epochSamples.length){status("Treinando… época "+(ep+1)+"/"+epochs+" · lote "+actualSteps+"/"+Math.ceil(epochSamples.length/bs));await yieldToUI()}else await tf.nextFrame()}lastLoss/=Math.max(1,actualSteps);
    $("bar").style.width=((ep+1)/epochs*100)+"%";$("loss").textContent=lastLoss.toFixed(3);
@@ -252,6 +253,7 @@ function detokenize(tokens){
  return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))
 }
 function canGenerateToken(token){return token===SPECIAL.end||token.startsWith(WORD_TOKEN_PREFIX)||/^[.,;:!?%…()[\]{}"“”'’\-–—]$/u.test(token)}
+function displayToken(token){return token&&token.startsWith(WORD_TOKEN_PREFIX)?token.slice(WORD_TOKEN_PREFIX.length):token}
 function chatLabelHtml(extra=""){return "<small>"+esc(activeModelName)+(extra?" · "+esc(extra):"")+"</small>"}
 function updateChatLabels(){document.querySelectorAll(".assistant-label").forEach(el=>el.textContent=activeModelName)}
 const MODEL_DB_NAME="roboeduc-ai-model-library";
@@ -359,7 +361,7 @@ async function generate(){
   const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;
   let nextProb=probs(input,temp);
   const initial=nextProb.map((v,i)=>blocked.has(idToToken[i])||!canGenerateToken(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
-  const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>canGenerateToken(x.t)&&!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(x.t)+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
+  const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>canGenerateToken(x.t)&&!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(displayToken(x.t))+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
   for(let i=0;i<max;i++){
    const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||!canGenerateToken(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
    const id=sample(adjusted,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);
