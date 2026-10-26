@@ -25,6 +25,8 @@
 <script>
 
 const $=id=>document.getElementById(id), status=(s,k='')=>{$('status').textContent=s;$('status').style.color=k==='good'?'#73e0c1':k==='warn'?'#ffd27d':''};
+const yieldToUI=()=>new Promise(resolve=>setTimeout(resolve,0));
+const MAX_SEQUENCE_TOKENS=256,MAX_TRAIN_SAMPLES=1600,MAX_VALIDATION_SAMPLES=240;
 const SPECIAL_RE=/<\|(?:pad|unk|conhecimento|titulo|conteudo|dialogo|usuario|assistente|fim_doc)\|>|[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]/giu;
 const SPECIAL={pad:"<|pad|>",unk:"<|unk|>",knowledge:"<|conhecimento|>",title:"<|titulo|>",content:"<|conteudo|>",dialogue:"<|dialogo|>",user:"<|usuario|>",assistant:"<|assistente|>",end:"<|fim_doc|>"};
 let subwordMerges=[],subwordCache=new Map(),subwordBaseTokens=[],knownWholeWords=new Set();
@@ -39,19 +41,25 @@ function encodeSubwordWord(word){
 function tokenize(s){return baseTokenize(s).flatMap(t=>{if(t.startsWith("<|"))return [t];if(/^[\p{L}\p{N}_]+$/u.test(t))return knownWholeWords.has(t)?[WORD_TOKEN_PREFIX+t]:encodeSubwordWord(t);return [t]})}
 function tokenizeSubword(s){return baseTokenize(s).flatMap(t=>{if(t.startsWith("<|"))return [t];if(/^[\p{L}\p{N}_]+$/u.test(t))return encodeSubwordWord(t);return [t]})}
 
-function learnSubwordTokenizer(docs){
+async function learnSubwordTokenizer(docs){
  const sequences=[],baseTokens=new Set(),wholeWords=new Set(),alphabet="abcdefghijklmnopqrstuvwxyzáàâãéêíóôõúüç0123456789_";
- for(const c of Array.from(alphabet)){baseTokens.add("▁"+c);baseTokens.add(c)}
- for(const doc of docs.filter(isReadyDocument)){
-  const title=(doc.title||"").trim(),texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
+ const ready=docs.filter(isReadyDocument);
+ for(let docIndex=0;docIndex<ready.length;docIndex++){
+  const doc=ready[docIndex],title=(doc.title||"").trim(),texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
+  for(const c of Array.from(alphabet)){baseTokens.add("▁"+c);baseTokens.add(c)}
   for(const txt of texts)for(const token of baseTokenize(txt))if(/^[\p{L}\p{N}_]+$/u.test(token)){wholeWords.add(token);const chars=Array.from(token);if(chars.length)chars[0]="▁"+chars[0];chars.forEach(c=>baseTokens.add(c));sequences.push(chars)}
+  status("Preparando vocabulário… documento "+(docIndex+1)+"/"+ready.length);
+  await yieldToUI()
  }
  subwordMerges=[];
  for(let iteration=0;iteration<128;iteration++){
-  const counts=new Map();for(const seq of sequences)for(let i=0;i<seq.length-1;i++){const key=JSON.stringify([seq[i],seq[i+1]]),v=counts.get(key);if(v)v.count++;else counts.set(key,{left:seq[i],right:seq[i+1],count:1})}
+  const counts=new Map();
+  for(const seq of sequences)for(let i=0;i<seq.length-1;i++){const key=JSON.stringify([seq[i],seq[i+1]]),v=counts.get(key);if(v)v.count++;else counts.set(key,{left:seq[i],right:seq[i+1],count:1})}
   let best=null;for(const v of counts.values())if(v.count>=2&&(!best||v.count>best.count))best=v;
-  if(!best)break;subwordMerges.push([best.left,best.right]);
+  if(!best)break;
+  subwordMerges.push([best.left,best.right]);
   for(let n=0;n<sequences.length;n++){const seq=sequences[n],next=[];for(let i=0;i<seq.length;i++){if(i+1<seq.length&&seq[i]===best.left&&seq[i+1]===best.right){next.push(seq[i]+seq[i+1]);i++}else next.push(seq[i])}sequences[n]=next}
+  if(iteration%4===0){status("Preparando vocabulário… combinação "+(iteration+1)+"/128");await yieldToUI()}
  }
  knownWholeWords=wholeWords;subwordBaseTokens=[...baseTokens];subwordCache=new Map()
 }
@@ -143,26 +151,50 @@ function renderDocuments(){
  updateDatasetSummary()
 }
 function bindDatasetEditor(){
- documents=loadDocuments();learnSubwordTokenizer(documents);renderDocuments();
+ documents=loadDocuments();renderDocuments();
  $("addKnowledge").onclick=()=>{documents.push({id:makeId(),title:"Novo conhecimento",kind:"knowledge",content:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
  $("addDialogue").onclick=()=>{documents.push({id:makeId(),title:"Novo diálogo",kind:"dialogue",prompt:"",response:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
  $("exportDocs").onclick=()=>{const payload={format:"roboeduc-ai-documents-v1",modelName:localStorage.getItem("roboeduc-ai-model-name")||"Meu modelo",documents};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="biblioteca-roboeduc-ai.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status("Biblioteca exportada como JSON.","good")};
  $("importDocs").onclick=()=>$("importDocsFile").click();
  $("importDocsFile").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const raw=JSON.parse(await file.text()),arr=Array.isArray(raw)?raw:raw.documents;if(!Array.isArray(arr))throw Error("O JSON precisa conter uma lista 'documents'.");const normalized=arr.map(d=>({id:d.id||makeId(),title:String(d.title||"Documento importado"),kind:d.kind==="dialogue"||d.type==="dialogue"?"dialogue":"knowledge",content:String(d.content||""),prompt:String(d.prompt||""),response:String(d.response||"")}));if(!normalized.length)throw Error("A biblioteca não contém documentos.");documents=normalized;saveDocuments();invalidateModel();renderDocuments();status("Biblioteca importada: "+documents.length+" documentos.","good")}catch(err){status("Não foi possível importar: "+err.message,"warn")}finally{e.target.value=""}})
 }
-function dataset(docs,requestedContext){
- const ready=docs.filter(isReadyDocument);if(ready.length<2)throw Error("Adicione pelo menos dois documentos completos para treinar.");
- learnSubwordTokenizer(ready);
+async function dataset(docs,requestedContext){
+ const ready=docs.filter(isReadyDocument);
+ if(ready.length<2)throw Error("Adicione pelo menos dois documentos completos para treinar.");
+ await learnSubwordTokenizer(ready);
  const seen=new Set(),encoded=[];let duplicates=0;
- for(const doc of ready){const sequences=sequencesForDocument(doc),key=sequences.map(t=>t.join(" ")).join(" || ");if(seen.has(key)){duplicates++;continue}seen.add(key);if(sequences.some(t=>t.length>=2))encoded.push({doc,sequences})}
+ for(let i=0;i<ready.length;i++){
+  const doc=ready[i],sequences=sequencesForDocument(doc),key=sequences.map(t=>t.join(" ")).join(" || ");
+  if(seen.has(key))duplicates++;else if(sequences.some(t=>t.length>=2)){seen.add(key);encoded.push({doc,sequences})}
+  if(i%2===1){status("Preparando textos… documento "+(i+1)+"/"+ready.length);await yieldToUI()}
+ }
  if(encoded.length<2)throw Error("Adicione mais textos diferentes.");
  const allSequences=encoded.flatMap(item=>item.sequences),mergeTokens=subwordMerges.map(pair=>pair[0]+pair[1]),wordTokens=[...knownWholeWords].map(word=>WORD_TOKEN_PREFIX+word),vocab=[SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant,SPECIAL.end,...subwordBaseTokens,...mergeTokens,...wordTokens,...allSequences.flat()];
- idToToken=[...new Set(vocab)];tokenToId=Object.fromEntries(idToToken.map((t,i)=>[t,i]));const padId=tokenToId[SPECIAL.pad],unkId=tokenToId[SPECIAL.unk];
+ idToToken=[...new Set(vocab)];tokenToId=Object.fromEntries(idToToken.map((t,i)=>[t,i]));
  const ctx=Math.max(2,Math.min(requestedContext,Math.max(...allSequences.map(tokens=>tokens.length-1))));
- function samplesFor(items){const samples=[];for(const item of items)for(const tokens of item.sequences){const ids=tokens.map(t=>tokenToId[t]??unkId);const assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]);for(let pos=1;pos<ids.length;pos++){const start=Math.max(0,pos-ctx),prev=ids.slice(start,pos),next=ids.slice(start+1,pos+1),pad=ctx-prev.length;const targetMask=Array.from({length:next.length},(_,j)=>assistantIndex<0||start+1+j>assistantIndex?1:0);if(targetMask.some(Boolean))samples.push({x:Array(pad).fill(padId).concat(prev),y:Array(pad).fill(padId).concat(next),mask:Array(pad).fill(0).concat(targetMask)})}}return samples}
- let trainDocs=encoded,valDocs=[];if(encoded.length>=5){valDocs=encoded.filter((_,i)=>i%5===0);trainDocs=encoded.filter((_,i)=>i%5!==0)}
- const trainSamples=samplesFor(trainDocs),validationSamples=samplesFor(valDocs);if(!trainSamples.length)throw Error("Os documentos não geraram exemplos de treino suficientes.");
- return{trainSamples,validationSamples,ctx,readyCount:ready.length,duplicates,incomplete:docs.length-ready.length,docCount:encoded.length,sequenceCount:allSequences.length,padId}
+ async function samplesFor(items,cap,label){
+  const samples=[];let seenSamples=0,processed=0;
+  for(const item of items)for(const sequence of item.sequences){
+   const ids=sequence.slice(0,MAX_SEQUENCE_TOKENS).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),assistantIndex=ids.indexOf(tokenToId[SPECIAL.assistant]);
+   for(let pos=1;pos<ids.length;pos++){
+    const start=Math.max(0,pos-ctx),prev=ids.slice(start,pos),next=ids.slice(start+1,pos+1),pad=ctx-prev.length;
+    const targetMask=Array.from({length:next.length},(_,j)=>assistantIndex<0||start+1+j>assistantIndex?1:0);
+    if(targetMask.some(Boolean)){
+     const sample={x:Array(pad).fill(tokenToId[SPECIAL.pad]).concat(prev),y:Array(pad).fill(tokenToId[SPECIAL.pad]).concat(next),mask:Array(pad).fill(0).concat(targetMask)};
+     seenSamples++;if(samples.length<cap)samples.push(sample);else{const pick=Math.floor(Math.random()*seenSamples);if(pick<cap)samples[pick]=sample}
+    }
+    processed++;if(processed%96===0)await yieldToUI()
+   }
+   status("Preparando exemplos… "+label+" · "+samples.length+" amostras mantidas");await yieldToUI()
+  }
+  return samples
+ }
+ let trainDocs=encoded,valDocs=[];
+ if(encoded.length>=5){valDocs=encoded.filter((_,i)=>i%5===0);trainDocs=encoded.filter((_,i)=>i%5!==0)}
+ const trainSamples=await samplesFor(trainDocs,MAX_TRAIN_SAMPLES,"treino");
+ const validationSamples=await samplesFor(valDocs,MAX_VALIDATION_SAMPLES,"validação");
+ if(!trainSamples.length)throw Error("Os documentos não geraram exemplos de treino suficientes.");
+ return{trainSamples,validationSamples,ctx,readyCount:ready.length,duplicates,incomplete:docs.length-ready.length,docCount:encoded.length,sequenceCount:allSequences.length,padId:tokenToId[SPECIAL.pad]}
 }
 function variable(shape,scale=.02){return tf.variable(tf.randomNormal(shape,0,scale))}
 function norm(x,g,b){let m=x.mean(-1,true),v=x.sub(m).square().mean(-1,true);return x.sub(m).div(v.add(1e-5).sqrt()).mul(g).add(b)}
@@ -196,27 +228,30 @@ function evaluateAccuracy(samples,limit=12){
 async function train(){
  if(busy||generating)return;busy=true;trained=false;$("train").disabled=true;$("send").disabled=true;
  try{
-  await tf.ready();if(model)model.dispose();if(opt)opt.dispose();const d=dataset(documents,+$("context").value);model=createModel(idToToken.length,d.ctx);opt=tf.train.adam(+$("lr").value/10000);
+  status("Inicializando TensorFlow.js…");await yieldToUI();await tf.ready();await yieldToUI();
+  status("Preparando vocabulário e exemplos…");await yieldToUI();const d=await dataset(documents,+$("context").value);
+  status("Criando rede neural…");await yieldToUI();if(model)model.dispose();if(opt)opt.dispose();model=createModel(idToToken.length,d.ctx);await yieldToUI();opt=tf.train.adam(+$("lr").value/10000);
   $("vocab").textContent=idToToken.length.toLocaleString("pt-BR");$("params").textContent=Object.values(model.vars).reduce((n,v)=>n+v.size,0).toLocaleString("pt-BR");$("loss").textContent="—";$("valLoss").textContent=d.validationSamples.length?"—":"N/D";$("valAccuracy").textContent=d.validationSamples.length?"—":"N/D";$("saveModel").disabled=true;
-  const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(80,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
+  const epochs=+$("epochs").value,bs=Math.min(8,d.trainSamples.length),steps=Math.min(24,Math.ceil(d.trainSamples.length/bs));$("bar").style.width="0%";
   for(let ep=0;ep<epochs;ep++){let lastLoss=0;const shuffled=d.trainSamples.slice().sort(()=>Math.random()-.5),epochSamples=shuffled.slice(0,Math.min(shuffled.length,bs*steps));let actualSteps=0;
-   for(let start=0;start<epochSamples.length;start+=bs){const batch=epochSamples.slice(start,start+bs),n=batch.length;const x=tf.tensor2d(batch.map(s=>s.x),[n,d.ctx],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,d.ctx],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,d.ctx],"float32"),cost=opt.minimize(()=>makeLoss(x,y,mw),true);lastLoss+=cost.dataSync()[0];actualSteps++;cost.dispose();x.dispose();y.dispose();mw.dispose();await tf.nextFrame()}lastLoss/=Math.max(1,actualSteps);
+   for(let start=0;start<epochSamples.length;start+=bs){const batch=epochSamples.slice(start,start+bs),n=batch.length;const x=tf.tensor2d(batch.map(s=>s.x),[n,d.ctx],"int32"),y=tf.tensor2d(batch.map(s=>s.y),[n,d.ctx],"int32"),mw=tf.tensor2d(batch.map(s=>s.mask),[n,d.ctx],"float32"),cost=opt.minimize(()=>makeLoss(x,y,mw),true);lastLoss+=cost.dataSync()[0];actualSteps++;cost.dispose();x.dispose();y.dispose();mw.dispose();if(actualSteps%4===0||start+n>=epochSamples.length){status("Treinando… época "+(ep+1)+"/"+epochs+" · lote "+actualSteps+"/"+Math.ceil(epochSamples.length/bs));await yieldToUI()}else await tf.nextFrame()}lastLoss/=Math.max(1,actualSteps);
    $("bar").style.width=((ep+1)/epochs*100)+"%";$("loss").textContent=lastLoss.toFixed(3);
    if(d.validationSamples.length&&(ep===0||(ep+1)%Math.max(1,Math.ceil(epochs/4))===0||ep===epochs-1)){await tf.nextFrame();const val=evaluateLoss(d.validationSamples,16),acc=evaluateAccuracy(d.validationSamples,12);$("valLoss").textContent=val===null?"N/D":val.toFixed(3);$("valAccuracy").textContent=acc===null?"N/D":(acc*100).toFixed(1)+"%"}
-   status("Treinando… época "+(ep+1)+"/"+epochs+" · "+d.trainSamples.length+" exemplos");await tf.nextFrame()
+   status("Época "+(ep+1)+"/"+epochs+" concluída · "+d.trainSamples.length+" exemplos disponíveis");await yieldToUI()
   }
   trained=true;$("send").disabled=false;const validation=Number($("valLoss").textContent),training=Number($("loss").textContent);const caution=Number.isFinite(validation)&&Number.isFinite(training)&&validation>training*2.5;status("Treinamento concluído. "+d.docCount+" documentos, "+d.sequenceCount+" sequências"+(d.duplicates?"; "+d.duplicates+" duplicados ignorados":"")+(d.incomplete?"; "+d.incomplete+" incompletos ignorados":"")+".",caution?"warn":"good");$("genStatus").textContent=caution?"A perda de validação ficou alta: o modelo ainda generaliza mal.":"A geração é produzida pelo modelo treinado. Compare respostas antes e depois de adicionar exemplos.";saveDocuments()
  }catch(e){console.error(e);status("Falha: "+e.message,"warn")}
  finally{busy=false;$("train").disabled=false;$("send").disabled=!trained;$("saveModel").disabled=!trained}
 }
 function probs(seq,temp){const cut=seq.slice(-model.C),pad=model.C-cut.length,padded=Array(pad).fill(tokenToId[SPECIAL.pad]).concat(cut),x=tf.tensor2d([padded],[1,model.C],"int32"),p=tf.tidy(()=>tf.softmax(model.forward(x).slice([0,model.C-1,0],[1,1,model.V]).reshape([model.V]).div(temp))),a=Array.from(p.dataSync());p.dispose();x.dispose();return a}
-function sample(p,k){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
+function sample(p,k){const c=p.map((v,i)=>({p:v,i})).filter(x=>Number.isFinite(x.p)&&x.p>0).sort((a,b)=>b.p-a.p).slice(0,k);if(!c.length)return p.indexOf(Math.max(...p));const logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
 function detokenize(tokens){
  let text="";
  for(const token of tokens){if(!token||token.startsWith("<|"))continue;if(token.startsWith(WORD_TOKEN_PREFIX)){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(WORD_TOKEN_PREFIX.length)}else if(token.startsWith("▁")){if(text&&!/\s$/u.test(text))text+=" ";text+=token.slice(1)}else if(/^[,.;:!?%…)\]}]/u.test(token))text+=token;else if(/^[([{¿¡]/u.test(token)){if(text&&!/\s$/u.test(text))text+=" ";text+=token}else text+=token}
  text=text.replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();
  return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))
 }
+function canGenerateToken(token){return token===SPECIAL.end||token.startsWith(WORD_TOKEN_PREFIX)||/^[.,;:!?%…()[\]{}"“”'’\-–—]$/u.test(token)}
 function chatLabelHtml(extra=""){return "<small>"+esc(activeModelName)+(extra?" · "+esc(extra):"")+"</small>"}
 function updateChatLabels(){document.querySelectorAll(".assistant-label").forEach(el=>el.textContent=activeModelName)}
 const MODEL_DB_NAME="roboeduc-ai-model-library";
@@ -323,10 +358,10 @@ async function generate(){
   const input=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),blocked=new Set([SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant]);
   const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;
   let nextProb=probs(input,temp);
-  const initial=nextProb.map((v,i)=>blocked.has(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
-  const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(x.t)+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
+  const initial=nextProb.map((v,i)=>blocked.has(idToToken[i])||!canGenerateToken(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
+  const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>canGenerateToken(x.t)&&!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(x.t)+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
   for(let i=0;i<max;i++){
-   const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
+   const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||!canGenerateToken(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
    const id=sample(adjusted,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);
    if(i%2===1||i===max-1){b.innerHTML=chatLabelHtml("GERANDO")+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}
    if(i<max-1)nextProb=probs(input,temp)
