@@ -68,7 +68,7 @@ function sequencesForDocument(d){
  return [base,...prompts.map(q=>dialogueSequence(q,content))]
 }
 function tokensForDocument(d){return sequencesForDocument(d).flat()}
-function invalidateModel()function invalidateModel(){
+function invalidateModel(){
  if(model){model.dispose();model=null}if(opt){opt.dispose();opt=null}trained=false;$("send").disabled=true;
  if($("vocab"))$("vocab").textContent=$("params").textContent=$("loss").textContent=$("valLoss").textContent="—";
  if($("bar"))$("bar").style.width="0%"
@@ -127,7 +127,7 @@ function dataset(docs,requestedContext){
  const trainSamples=samplesFor(trainDocs),validationSamples=samplesFor(valDocs);if(!trainSamples.length)throw Error("Os documentos não geraram exemplos de treino suficientes.");
  return{trainSamples,validationSamples,ctx,readyCount:ready.length,duplicates,incomplete:docs.length-ready.length,docCount:encoded.length,sequenceCount:allSequences.length,padId}
 }
-function variable(shape,scale=.02)function variable(shape,scale=.02){return tf.variable(tf.randomNormal(shape,0,scale))}
+function variable(shape,scale=.02){return tf.variable(tf.randomNormal(shape,0,scale))}
 function norm(x,g,b){let m=x.mean(-1,true),v=x.sub(m).square().mean(-1,true);return x.sub(m).div(v.add(1e-5).sqrt()).mul(g).add(b)}
 function createModel(V,C){
  let vars={},w=(n,s,z)=>vars[n]=variable(s,z),m={vars,V,C,blocks:[]};m.te=w("te",[V,D],.04);m.pe=w("pe",[C,D],.04);m.head=w("head",[D,V],1/Math.sqrt(D));m.hb=w("hb",[V],.01);
