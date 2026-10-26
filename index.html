@@ -31,7 +31,7 @@ let subwordMerges=[],subwordCache=new Map(),subwordBaseTokens=[];
 const baseTokenize=s=>(s.match(SPECIAL_RE)||[]).map(t=>t.startsWith("<|")?t:t.toLocaleLowerCase("pt-BR"));
 function encodeSubwordWord(word){
  if(subwordCache.has(word))return subwordCache.get(word).slice();
- let pieces=Array.from("▁"+word);
+ let pieces=Array.from(word);if(pieces.length)pieces[0]="▁"+pieces[0];
  for(const pair of subwordMerges){
   const next=[];
   for(let i=0;i<pieces.length;i++){
@@ -56,7 +56,7 @@ function learnSubwordTokenizer(docs){
   const title=(doc.title||"").trim();
   const texts=doc.kind==="dialogue"?[title,doc.prompt,doc.response]:[title,doc.content,"O que é "+title+"?","Fale sobre "+title+".","Explique "+title+"."];
   for(const text of texts)for(const token of baseTokenize(text))if(/^[\p{L}\p{N}_]+$/u.test(token)){
-   const chars=Array.from("▁"+token);chars.forEach(c=>baseTokens.add(c));wordSequences.push(chars)
+   const chars=Array.from(token);if(chars.length)chars[0]="▁"+chars[0];chars.forEach(c=>baseTokens.add(c));wordSequences.push(chars)
   }
  }
  subwordMerges=[];
@@ -295,7 +295,7 @@ async function saveCurrentModel(){
   const name=$("saveModelName").value.trim()||activeModelName||"Meu modelo",id=(typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():makeId();
   const params=Object.values(model.vars).reduce((sum,v)=>sum+v.size,0),description=$("modelDescription").value.trim()||localStorage.getItem("roboeduc-ai-model-description")||"";
   const meta={id,name,description,savedAt:Date.now(),vocabularySize:idToToken.length,params,context:model.C,loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent};
-  const payload={id,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
+  const payload={id,tokenizerVersion:2,vocabulary:idToToken.slice(),subwordMerges:subwordMerges.map(pair=>pair.slice()),baseTokens:subwordBaseTokens.slice(),context:model.C,documents:JSON.parse(JSON.stringify(documents)),weights:serializableWeights(),settings:{epochs:+$("epochs").value,requestedContext:+$("context").value,lr:+$("lr").value,temperature:+$("temperature").value,maxTokens:+$("maxTokens").value,topk:+$("topk").value},metrics:{loss:$("loss").textContent,valLoss:$("valLoss").textContent,valAccuracy:$("valAccuracy").textContent}};
   await saveModelRecord(meta,payload);$("saveModelName").value=name;$("modelName").value=name;$("trainHeading").textContent="Treinar: "+name;document.title=name+" · RoboEduc AI Create";activeModelName=name;localStorage.setItem("roboeduc-ai-model-name",name);localStorage.setItem("roboeduc-ai-model-description",description);updateChatLabels();
   status("Modelo '"+name+"' salvo neste navegador.","good");await refreshSavedModels()
  }catch(e){console.error(e);status("Não foi possível salvar o modelo: "+e.message,"warn")}
@@ -306,7 +306,7 @@ async function loadSavedModel(id){
  try{
   status("Carregando modelo salvo…");await tf.ready();
   const {meta,payload}=await loadModelRecord(id);
-  if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
+  if(payload.tokenizerVersion!==2)throw new Error("Este modelo foi salvo com uma versão antiga da tokenização. Treine e salve novamente para usar o formato atualizado.");if(!Array.isArray(payload.vocabulary)||!Array.isArray(payload.weights)||!Number.isInteger(payload.context))throw new Error("Os dados salvos não parecem ser um modelo válido.");
   invalidateModel();subwordMerges=Array.isArray(payload.subwordMerges)?payload.subwordMerges:[];subwordBaseTokens=Array.isArray(payload.baseTokens)?payload.baseTokens:[];subwordCache=new Map();
   idToToken=payload.vocabulary.slice();tokenToId=Object.fromEntries(idToToken.map((token,index)=>[token,index]));model=createModel(idToToken.length,payload.context);
   for(const item of payload.weights){
