@@ -370,9 +370,9 @@ function updateRLPanel(message){
 }
 async function applyReinforcementReward(reward){
  const sample=lastFeedbackSample;if(!sample||sample.applied||busy||generating||!trained||sample.modelRef!==model)return;if(!sample.tokenIds.length){updateRLPanel("Esta resposta não contém tokens treináveis. Gere outra resposta.");return}
- busy=true;$("train").disabled=true;$("send").disabled=true;updateRLPanel("Aplicando a recompensa aos pesos…");status("Aprendizado por recompensa: calculando uma atualização…");await tf.nextFrame();let x=null,y=null,mask=null;
+ busy=true;$("train").disabled=true;$("send").disabled=true;updateRLPanel("Aplicando a recompensa aos pesos…");status("Aprendizado por recompensa: calculando uma atualização…");let x=null,y=null,mask=null;
  try{
-  const padId=tokenToId[SPECIAL.pad],prefix=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+sample.prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),sequence=prefix.concat(sample.tokenIds),rows=[];
+  await tf.nextFrame();const padId=tokenToId[SPECIAL.pad],prefix=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+sample.prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),sequence=prefix.concat(sample.tokenIds),rows=[];
   for(let targetPos=prefix.length;targetPos<sequence.length;targetPos++){const prior=sequence.slice(Math.max(0,targetPos-model.C),targetPos),padCount=model.C-prior.length,xrow=Array(padCount).fill(padId).concat(prior),yrow=Array(model.C).fill(padId),mrow=Array(model.C).fill(0);yrow[model.C-1]=sequence[targetPos];mrow[model.C-1]=1;rows.push({x:xrow,y:yrow,m:mrow})}
   if(!rows.length)throw new Error("Não há tokens de resposta para avaliar.");let chosen=rows;if(rows.length>16)chosen=Array.from({length:16},(_,i)=>rows[Math.round(i*(rows.length-1)/15)]);
   x=tf.tensor2d(chosen.map(r=>r.x),[chosen.length,model.C],"int32");y=tf.tensor2d(chosen.map(r=>r.y),[chosen.length,model.C],"int32");mask=tf.tensor2d(chosen.map(r=>r.m),[chosen.length,model.C],"float32");if(!rlOpt)rlOpt=tf.train.adam(0.00003);
