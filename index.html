@@ -166,7 +166,7 @@ async function train(){
  }catch(e){console.error(e);status("Falha: "+e.message,"warn")}
  finally{busy=false;$("train").disabled=false;$("send").disabled=!trained}
 }
-function probs(seq,temp){const cut=seq.slice(-model.C),x=tf.tensor2d([cut],[1,cut.length],"int32"),p=tf.tidy(()=>tf.softmax(model.forward(x).slice([0,cut.length-1,0],[1,1,model.V]).reshape([model.V]).div(temp))),a=Array.from(p.dataSync());p.dispose();x.dispose();return a}
+function probs(seq,temp){const cut=seq.slice(-model.C),pad=model.C-cut.length,padded=Array(pad).fill(tokenToId[SPECIAL.pad]).concat(cut),x=tf.tensor2d([padded],[1,model.C],"int32"),p=tf.tidy(()=>tf.softmax(model.forward(x).slice([0,model.C-1,0],[1,1,model.V]).reshape([model.V]).div(temp))),a=Array.from(p.dataSync());p.dispose();x.dispose();return a}
 function sample(p,k){const c=p.map((v,i)=>({p:v,i})).sort((a,b)=>b.p-a.p).slice(0,k),logs=c.map(x=>Math.log(Math.max(x.p,1e-12))),mx=Math.max(...logs),sum=logs.reduce((s,x)=>s+Math.exp(x-mx),0);let r=Math.random()*sum;for(let j=0;j<c.length;j++){r-=Math.exp(logs[j]-mx);if(r<=0)return c[j].i}return c[0].i}
 function detokenize(tokens){const text=tokens.filter(t=>t&&!t.startsWith("<|")).join(" ").replace(/\s+([,.;:!?%…)\]}])/gu,"$1").replace(/([(\\[{¿¡])\s+/gu,"$1").replace(/\s+(['’])/gu,"$1").trim();return text.replace(/(^|[.!?]\s+)([\p{L}])/gu,(_,p,c)=>p+c.toLocaleUpperCase("pt-BR")).replace(/^([\p{L}])/u,(_,c)=>c.toLocaleUpperCase("pt-BR"))}
 async function generate(){
@@ -177,12 +177,21 @@ async function generate(){
   const raw=tokenize(prompt);if(!raw.length)throw Error("Escreva uma pergunta ou frase inicial.");const known=raw.filter(t=>tokenToId[t]!==undefined).length;if(!known)throw Error("Ainda não há palavras dessa pergunta no vocabulário. Adicione exemplos sobre esse tema e treine novamente.");
   const input=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),blocked=new Set([SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant]);
   const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;
-  const initial=probs(input,temp).map((v,i)=>blocked.has(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
+  let nextProb=probs(input,temp);
+  const initial=nextProb.map((v,i)=>blocked.has(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
   const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(x.t)+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
-  for(let i=0;i<max;i++){const nextProb=probs(input,temp).map((v,j)=>blocked.has(idToToken[j])||(idToToken[j]===SPECIAL.end&&out.length<3)?0:v);const id=sample(nextProb,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);if(i%3===0){b.innerHTML="<small>MINI GPT · GERANDO</small>"+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}}
+  for(let i=0;i<max;i++){
+   const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
+   const id=sample(adjusted,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);
+   if(i%2===1||i===max-1){b.innerHTML="<small>MINI GPT · GERANDO</small>"+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}
+   if(i<max-1)nextProb=probs(input,temp)
+  }
   const rawModel=detokenize(out)||"Não consegui gerar uma continuação.";
   b.innerHTML="<small>MINI GPT · GERAÇÃO DO MODELO</small>"+esc(rawModel);
-  $("genStatus").textContent="Esta resposta foi gerada pelos pesos treinados, sem recuperar uma resposta pronta. O modelo pode errar; melhore os exemplos e treine novamente.";
+  const truncated=input.length>model.C;
+  $("genStatus").textContent=truncated
+   ?"A resposta veio dos pesos treinados. A janela é de "+model.C+" tokens; em perguntas longas, o começo pode ficar fora do contexto. Aumente a janela e treine novamente para testar perguntas maiores."
+   :"A resposta veio dos pesos treinados, sem recuperar uma resposta pronta. O contexto agora usa o mesmo alinhamento do treinamento. O modelo ainda pode errar.";
  }catch(e){b.innerHTML="<small>AVISO</small>"+esc(e.message)}finally{$("send").disabled=!trained;box.scrollTop=box.scrollHeight}
 }
 $("train").onclick=train;$("train").onclick=train;$("send").onclick=generate;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")generate()});
