@@ -444,13 +444,13 @@ async function generate(){
  try{
   const raw=tokenize(prompt);if(!raw.length)throw Error("Escreva uma pergunta ou frase inicial.");const known=raw.filter(t=>tokenToId[t]!==undefined).length;if(!known)throw Error("Ainda não há palavras dessa pergunta no vocabulário. Adicione exemplos sobre esse tema e treine novamente.");
   const input=tokenize(SPECIAL.dialogue+" "+SPECIAL.user+" "+prompt+" "+SPECIAL.assistant).map(t=>tokenToId[t]??tokenToId[SPECIAL.unk]),blocked=new Set([SPECIAL.pad,SPECIAL.unk,SPECIAL.knowledge,SPECIAL.title,SPECIAL.content,SPECIAL.dialogue,SPECIAL.user,SPECIAL.assistant]);
-  const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;
+  const out=[],temp=+$("temperature").value/10,k=+$("topk").value,max=+$("maxTokens").value;let generatedWords=0;
   let nextProb=probs(input,temp);
   const initial=nextProb.map((v,i)=>blocked.has(idToToken[i])||!canGenerateToken(idToToken[i])||idToToken[i]===SPECIAL.end?0:v);
   const top=initial.map((v,i)=>({v,t:idToToken[i]})).filter(x=>canGenerateToken(x.t)&&!x.t.startsWith("<|")).sort((a,b)=>b.v-a.v).slice(0,5);$("probs").innerHTML=top.map(x=>'<span class="chip">'+esc(displayToken(x.t))+' <b>'+(x.v*100).toFixed(1)+'%</b></span>').join("");
   for(let i=0;i<max;i++){
-   const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||!canGenerateToken(token)||(token===SPECIAL.end&&out.length<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
-   const id=sample(adjusted,k);if(idToToken[id]===SPECIAL.end)break;input.push(id);out.push(idToToken[id]);
+   const adjusted=nextProb.map((v,j)=>{const token=idToToken[j];if(blocked.has(token)||!canGenerateToken(token)||(token===SPECIAL.end&&generatedWords<3))return 0;let score=v;if(out.length){let repeated=0;for(const previous of out)if(previous===token)repeated++;if(repeated)score/=1+repeated*0.35;if(out[out.length-1]===token)score*=0.15}return score});
+   const id=sample(adjusted,k),chosenToken=idToToken[id];if(chosenToken===SPECIAL.end)break;input.push(id);out.push(chosenToken);if(chosenToken.startsWith(WORD_TOKEN_PREFIX))generatedWords++;
    if(i%2===1||i===max-1){b.innerHTML=chatLabelHtml("GERANDO")+esc(detokenize(out));await new Promise(r=>setTimeout(r,0))}
    if(i<max-1)nextProb=probs(input,temp)
   }
