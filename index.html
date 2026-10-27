@@ -526,7 +526,7 @@ async function generate(){
   $("genStatus").textContent=truncated
    ?"A resposta veio dos pesos treinados. A janela é de "+model.C+" tokens; em perguntas longas, o começo pode ficar fora do contexto. Aumente a janela e treine novamente para testar perguntas maiores."
    :"A resposta veio dos pesos treinados, sem recuperar uma resposta pronta. O contexto agora usa o mesmo alinhamento do treinamento. O modelo ainda pode errar.";
- }catch(e){b.innerHTML="<small>AVISO</small>"+esc(e.message)}finally{generating=false;$("send").disabled=!trained;updateRLPanel();box.scrollTop=box.scrollHeight}
+ }catch(e){b.innerHTML="<small>AVISO</small>"+esc(e.message)}finally{generating=false;if(model)model.traceEnabled=false;$("send").disabled=!trained;updateRLPanel();box.scrollTop=box.scrollHeight}
 }
 $("train").onclick=train;$("train").onclick=train;$("send").onclick=generate;$("rewardGood").onclick=()=>applyReinforcementReward(0.5);$("rewardBad").onclick=()=>applyReinforcementReward(-0.5);$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")generate()});
 $("reset").onclick=()=>{invalidateModel();status("Modelo descartado; o próximo treino começa com pesos aleatórios.")};
