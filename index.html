@@ -523,7 +523,25 @@ if(typeof tf!=="undefined")tf.ready().then(()=>status("Pronto. Revise os documen
 </script>
 <script>
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));window.scrollTo({top:0,behavior:'instant'});if(id==='page-train')$('prompt').focus({preventScroll:true})}
-$('homeNav').onclick=()=>showPage('page-home');$('startCreate').onclick=$('homeCreate').onclick=()=>showPage('page-create');document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}activeModelName=name;$('saveModelName').value=name;updateChatLabels();$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
-const priorName=localStorage.getItem('roboeduc-ai-model-name');if(priorName)$('modelName').value=priorName;
+$('homeNav').onclick=()=>showPage('page-home');
+function prepareNewModel(){
+ $('modelName').value='Meu primeiro modelo';
+ $('modelDescription').value='Um modelo experimental para aprender padrões em textos sobre robótica.';
+ $('modelName').style.borderColor='';
+ activeModelName='Meu primeiro modelo';
+ localStorage.removeItem('roboeduc-ai-model-name');
+ localStorage.removeItem('roboeduc-ai-model-description');
+ invalidateModel();
+ documents=DEFAULT_DOCUMENTS.map(d=>({...d}));
+ saveDocuments();renderDocuments();
+ $('chat').innerHTML='<div class="bubble bot">'+chatLabelHtml()+'Treine o modelo com textos e diálogos próprios. Ele pode errar: observe como os exemplos afetam as respostas.</div>';
+ $('prompt').value='';lastFeedbackSample=null;updateRLPanel();
+ $('saveModelName').value=activeModelName;$('trainHeading').textContent='Treinar modelo';
+ document.title='RoboEduc AI Create';updateChatLabels();
+ showPage('page-create');
+}
+$('startCreate').onclick=$('homeCreate').onclick=prepareNewModel;
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}invalidateModel();activeModelName=name;$('saveModelName').value=name;updateChatLabels();$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
+// Não preencher o formulário de novo modelo com o nome do último modelo salvo.
 </script></body></html>
