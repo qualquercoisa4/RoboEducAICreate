@@ -51,6 +51,7 @@ header{background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border-bottom
 #page-home .home-bottom p:before{content:"✦";color:var(--yellow);margin-right:10px}
 @media(max-width:720px){.home-hero{padding-top:42px;gap:28px}.art-card{min-height:300px;padding:24px}.art-card .bigmark{min-height:160px}.hero-robot{width:min(100%,250px)}#page-home .container:before{right:5%;top:25px}#page-home .container:after{left:-12%;top:360px;font-size:22px}.home-bottom{padding:18px;align-items:flex-start}.page.active:after{right:0;bottom:3vh}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}}
+ .button.danger{background:#fff0f1;color:#b42335;border:1px solid #f2c5ca}.button.danger:hover{background:#ffe2e5}
 </style></head><body>
 <header><div class="brandmark"><span>ROBO</span><span class="letters"><b>E</b><i>D</i><em>U</em><strong>C</strong></span></div><div class="brand"><h1>RoboEduc AI Create</h1><p>Laboratório de inteligência artificial</p></div><div class="top-actions"><button id="homeNav" class="button light">Início</button></div></header>
 <section class="page active" id="page-home"><div class="container"><div class="home-hero"><div><div class="eyebrow">Aprender · Criar · Experimentar</div><h2>Ideias viram <span class="color-word">inteligência.</span></h2><p>Crie seu próprio modelo de linguagem, ensine com seus textos e veja o que ele aprende.</p><button class="button" id="startCreate">Criar modelo <span aria-hidden="true">→</span></button></div><div class="art-card"><div class="bigmark"><svg class="hero-robot" viewBox="0 0 300 220" role="img" aria-label="Ilustração de um robô simpático com circuitos coloridos"><defs><linearGradient id="botShell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cbd9f5"/></linearGradient><linearGradient id="botScreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#263c64"/><stop offset="1" stop-color="#182641"/></linearGradient></defs><g class="hero-orbit" fill="none" stroke-width="1.5"><ellipse cx="150" cy="102" rx="118" ry="62" stroke="#ffffff30" stroke-dasharray="4 7"/><ellipse cx="150" cy="102" rx="100" ry="83" stroke="#63d7ff55" transform="rotate(-30 150 102)"/><circle cx="40" cy="82" r="5" fill="#e83e8c" stroke="none"/><circle cx="252" cy="142" r="5" fill="#ffc928" stroke="none"/><circle cx="210" cy="24" r="4" fill="#32bf79" stroke="none"/></g><path d="M150 24V42" stroke="#ffc928" stroke-width="5" stroke-linecap="round"/><circle cx="150" cy="18" r="8" fill="#ffc928"/><rect x="91" y="43" width="118" height="100" rx="27" fill="url(#botShell)" stroke="#fff" stroke-width="2"/><rect x="102" y="55" width="96" height="73" rx="19" fill="url(#botScreen)"/><circle cx="127" cy="84" r="8" fill="#2688e8"/><circle cx="173" cy="84" r="8" fill="#e83e8c"/><path d="M127 106Q150 122 173 106" fill="none" stroke="#32bf79" stroke-width="5" stroke-linecap="round"/><rect x="74" y="70" width="15" height="42" rx="7" fill="#e83e8c"/><rect x="211" y="70" width="15" height="42" rx="7" fill="#2688e8"/><path d="M113 146L104 165H196L187 146" fill="url(#botShell)" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="113" y="162" width="74" height="33" rx="12" fill="#fff" stroke="#d9e5ff" stroke-width="2"/><circle cx="132" cy="178" r="5" fill="#e83e8c"/><circle cx="150" cy="178" r="5" fill="#ffc928"/><circle cx="168" cy="178" r="5" fill="#32bf79"/><path d="M92 83H65V57H47M208 83H235V57H254" fill="none" stroke="#ffffff80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="43" cy="57" r="4" fill="#ffc928"/><circle cx="258" cy="57" r="4" fill="#32bf79"/><g font-family="monospace" font-weight="800" font-size="12"><text x="26" y="153" fill="#ffc928">{ }</text><text x="230" y="184" fill="#63d7ff">&lt;/&gt;</text></g></svg></div><div><strong>Seu laboratório de IA</strong><br><small>Crie. Treine. Descubra.</small><div class="palette"><span class="swatch" style="background:var(--pink)"></span><span class="swatch" style="background:var(--blue)"></span><span class="swatch" style="background:var(--yellow)"></span><span class="swatch" style="background:var(--green)"></span></div></div></div></div><div class="home-bottom"><p>Um espaço simples para explorar como modelos aprendem padrões em textos.</p><button class="button light" id="homeCreate">Começar agora →</button></div></div></section>
@@ -59,6 +60,7 @@ header{background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border-bottom
 <div class="dataset-summary"><span id="datasetCount">0 documentos</span><span id="datasetWords">0 tokens de treino</span></div>
 <div id="docList" class="doc-list"></div>
 <div class="dataset-actions"><button id="addKnowledge" class="button teal">+ Conhecimento</button><button id="addDialogue" class="button light">+ Diálogo de exemplo</button></div>
+<div class="dataset-actions"><button id="deleteAllExamples" class="button danger" type="button">Apagar todos os exemplos</button></div>
 <div class="dataset-actions"><button id="importDocs" class="button light">Importar biblioteca JSON</button><button id="exportDocs" class="button light">Exportar biblioteca</button><input id="importDocsFile" type="file" accept=".json,application/json" hidden></div>
 <p class="hint">Cada cartão é um documento separado. O modelo aprende dos textos e dos diálogos. Palavras conhecidas permanecem inteiras; perguntas com palavras novas também são treinadas com subpalavras. Para ensinar respostas, adicione diálogos variados.</p>
 <div class="row"><button id="train">Treinar do zero</button><button id="reset" class="alt">Reiniciar</button></div><div class="bar"><span id="bar"></span></div><div id="status" class="status">Carregando TensorFlow.js…</div>
@@ -135,7 +137,7 @@ const DEFAULT_DOCUMENTS=[
 ];
 function isReadyDocument(d){return d.kind==="dialogue"?!!(d.prompt&&d.prompt.trim()&&d.response&&d.response.trim()):!!(d.title&&d.title.trim()&&d.content&&d.content.trim())}
 function loadDocuments(){
- try{const saved=localStorage.getItem("roboeduc-ai-documents-v1");if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed)&&parsed.length)return parsed}}
+ try{const saved=localStorage.getItem("roboeduc-ai-documents-v1");if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed))return parsed}}
  catch(e){console.warn("Biblioteca salva inválida",e)}
  const old=localStorage.getItem("roboeduc-ai-corpus");
  const seeded=DEFAULT_DOCUMENTS.map(d=>({...d}));
@@ -203,6 +205,7 @@ function bindDatasetEditor(){
  documents=loadDocuments();renderDocuments();
  $("addKnowledge").onclick=()=>{documents.push({id:makeId(),title:"Novo conhecimento",kind:"knowledge",content:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
  $("addDialogue").onclick=()=>{documents.push({id:makeId(),title:"Novo diálogo",kind:"dialogue",prompt:"",response:""});saveDocuments();invalidateModel();renderDocuments();const fields=$("docList").querySelectorAll(".doc-title-input");fields[fields.length-1]?.focus()};
+ $("deleteAllExamples").onclick=()=>{if(!documents.length){status("A biblioteca já está vazia.");return}if(!confirm("Apagar todos os documentos e diálogos de exemplo? Esta ação não pode ser desfeita."))return;documents=[];saveDocuments();invalidateModel();renderDocuments();status("Todos os exemplos foram apagados. Adicione novos exemplos e treine novamente.","warn")};
  $("exportDocs").onclick=()=>{const payload={format:"roboeduc-ai-documents-v1",modelName:localStorage.getItem("roboeduc-ai-model-name")||"Meu modelo",documents};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="biblioteca-roboeduc-ai.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status("Biblioteca exportada como JSON.","good")};
  $("importDocs").onclick=()=>$("importDocsFile").click();
  $("importDocsFile").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{const raw=JSON.parse(await file.text()),arr=Array.isArray(raw)?raw:raw.documents;if(!Array.isArray(arr))throw Error("O JSON precisa conter uma lista 'documents'.");const normalized=arr.map(d=>({id:d.id||makeId(),title:String(d.title||"Documento importado"),kind:d.kind==="dialogue"||d.type==="dialogue"?"dialogue":"knowledge",content:String(d.content||""),prompt:String(d.prompt||""),response:String(d.response||"")}));if(!normalized.length)throw Error("A biblioteca não contém documentos.");documents=normalized;saveDocuments();invalidateModel();renderDocuments();status("Biblioteca importada: "+documents.length+" documentos.","good")}catch(err){status("Não foi possível importar: "+err.message,"warn")}finally{e.target.value=""}})
@@ -520,7 +523,25 @@ if(typeof tf!=="undefined")tf.ready().then(()=>status("Pronto. Revise os documen
 </script>
 <script>
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));window.scrollTo({top:0,behavior:'instant'});if(id==='page-train')$('prompt').focus({preventScroll:true})}
-$('homeNav').onclick=()=>showPage('page-home');$('startCreate').onclick=$('homeCreate').onclick=()=>showPage('page-create');document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}activeModelName=name;$('saveModelName').value=name;updateChatLabels();$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
-const priorName=localStorage.getItem('roboeduc-ai-model-name');if(priorName)$('modelName').value=priorName;
+$('homeNav').onclick=()=>showPage('page-home');
+function prepareNewModel(){
+ $('modelName').value='Meu primeiro modelo';
+ $('modelDescription').value='Um modelo experimental para aprender padrões em textos sobre robótica.';
+ $('modelName').style.borderColor='';
+ activeModelName='Meu primeiro modelo';
+ localStorage.removeItem('roboeduc-ai-model-name');
+ localStorage.removeItem('roboeduc-ai-model-description');
+ invalidateModel();
+ documents=DEFAULT_DOCUMENTS.map(d=>({...d}));
+ saveDocuments();renderDocuments();
+ $('chat').innerHTML='<div class="bubble bot">'+chatLabelHtml()+'Treine o modelo com textos e diálogos próprios. Ele pode errar: observe como os exemplos afetam as respostas.</div>';
+ $('prompt').value='';lastFeedbackSample=null;updateRLPanel();
+ $('saveModelName').value=activeModelName;$('trainHeading').textContent='Treinar modelo';
+ document.title='RoboEduc AI Create';updateChatLabels();
+ showPage('page-create');
+}
+$('startCreate').onclick=$('homeCreate').onclick=prepareNewModel;
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
+$('makeModel').onclick=()=>{let name=$('modelName').value.trim();if(!name){$('modelName').focus();$('modelName').style.borderColor='var(--pink)';return}invalidateModel();activeModelName=name;$('saveModelName').value=name;updateChatLabels();$('trainHeading').textContent='Treinar: '+name;$('trainDescription').textContent=$('modelDescription').value.trim()||'Prepare os textos e inicie o treinamento.';document.title=name+' · RoboEduc AI Create';localStorage.setItem('roboeduc-ai-model-name',name);localStorage.setItem('roboeduc-ai-model-description',$('modelDescription').value.trim());showPage('page-train')};
+// Não preencher o formulário de novo modelo com o nome do último modelo salvo.
 </script></body></html>
